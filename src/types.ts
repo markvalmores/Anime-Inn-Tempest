@@ -27,3 +27,13 @@ export interface UserStats {
   claimedCodes: RedemptionCode[];
   pinnedIds: string[];
 }
+
+export interface LikedHistoryItem {
+  id: string;
+  title: string;
+  imageUrl: string;
+  likedAt: number; // timestamp in milliseconds
+  category: string;
+  character: string;
+}
+

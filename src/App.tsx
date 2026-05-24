@@ -24,14 +24,18 @@ import {
   Calendar,
   RefreshCw,
   ArrowUp,
-  Wallet
+  Wallet,
+  History,
+  Trash2,
+  CalendarDays
 } from 'lucide-react';
 
-import { AnimeWallpaper, RedemptionCode, UserStats } from './types';
+import { AnimeWallpaper, RedemptionCode, UserStats, LikedHistoryItem } from './types';
 import { CATEGORIES, INITIAL_WALLPAPERS, fetchLiveAnimeWallpapers } from './data/wallpapers';
 import AnimeCard from './components/AnimeCard';
 import ShopModal from './components/ShopModal';
 import WallpaperDetailModal from './components/WallpaperDetailModal';
+import LikedHistoryModal from './components/LikedHistoryModal';
 
 // Logo asset path from image generator
 // @ts-ignore
@@ -115,6 +119,8 @@ export default function App() {
   // Modal control states
   const [selectedWallpaper, setSelectedWallpaper] = useState<AnimeWallpaper | null>(null);
   const [isShopOpen, setIsShopOpen] = useState<boolean>(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
+  const [likedHistory, setLikedHistory] = useState<LikedHistoryItem[]>([]);
 
   // Pagination pointer and safety refs for infinite scroll generator to prevent race conditions
   const [loadedOffset, setLoadedOffset] = useState<number>(INITIAL_WALLPAPERS.length);
@@ -146,15 +152,67 @@ export default function App() {
     const savedCodes = localStorage.getItem('tempest_codes');
     const savedStreak = localStorage.getItem('tempest_streak');
     const savedLastClaim = localStorage.getItem('tempest_last_claim_date');
+    const savedHistory = localStorage.getItem('tempest_liked_history');
 
     if (savedPoints) setPoints(parseInt(savedPoints, 10));
-    if (savedPinned) {
-      const parsedPinned = JSON.parse(savedPinned);
-      setPinnedIds(parsedPinned);
-    }
     if (savedCodes) setRedeemedCodes(JSON.parse(savedCodes));
     if (savedStreak) setStreak(parseInt(savedStreak, 10));
     if (savedLastClaim) setLastClaimDate(savedLastClaim);
+
+    let initialPinned: string[] = [];
+    if (savedPinned) {
+      try {
+        initialPinned = JSON.parse(savedPinned);
+      } catch (err) {
+        initialPinned = [];
+      }
+    }
+
+    let historyList: LikedHistoryItem[] = [];
+    if (savedHistory) {
+      try {
+        historyList = JSON.parse(savedHistory);
+      } catch (err) {
+        historyList = [];
+      }
+    } else if (initialPinned.length > 0) {
+      // Migrate existing pinned IDs to history so previous likes aren't lost immediately
+      historyList = initialPinned.map(id => {
+        const wp = INITIAL_WALLPAPERS.find(w => w.id === id);
+        return {
+          id,
+          title: wp ? wp.title : 'Anime Wallpaper',
+          imageUrl: wp ? wp.imageUrl : '',
+          likedAt: Date.now(), // Assigned now, will expire in 30 days
+          category: wp ? wp.category : 'General',
+          character: wp ? wp.character : 'Unknown'
+        };
+      });
+    }
+
+    // Auto-Delete expired liked items (older than 30 days) to prevent storage piling up
+    const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+    const nowTime = Date.now();
+    const activeHistory = historyList.filter(item => {
+      const age = nowTime - item.likedAt;
+      return age < thirtyDaysInMs;
+    });
+
+    const purgedCount = historyList.length - activeHistory.length;
+    if (purgedCount > 0) {
+      setRecentActions(prev => [
+        { id: `purge-${Date.now()}`, text: `Auto-Purged ${purgedCount} expired likes (>30 Days)`, time: 'Just now', plus: false },
+        ...prev.slice(0, 5)
+      ]);
+    }
+
+    // Synchronize both state variables and localStorage
+    const activePinnedIds = activeHistory.map(item => item.id);
+    setPinnedIds(activePinnedIds);
+    setLikedHistory(activeHistory);
+
+    localStorage.setItem('tempest_pinned', JSON.stringify(activePinnedIds));
+    localStorage.setItem('tempest_liked_history', JSON.stringify(activeHistory));
 
     // Initial JST setup
     try {
@@ -283,7 +341,7 @@ export default function App() {
     e.stopPropagation();
     let updatedPinned: string[];
     let rewardPoints = 0;
-    const targetWp = wallpapers.find(w => w.id === id);
+    const targetWp = wallpapers.find(w => w.id === id) || INITIAL_WALLPAPERS.find(w => w.id === id);
     const title = targetWp ? targetWp.title : 'Anime Wallpaper';
 
     if (pinnedIds.includes(id)) {
@@ -294,6 +352,11 @@ export default function App() {
         { id: `act-${Date.now()}`, text: `Removed like from ${title}`, time: 'Just now', plus: false },
         ...prev.slice(0, 5)
       ]);
+
+      // Update likedHistory
+      const nextHistory = likedHistory.filter(item => item.id !== id);
+      setLikedHistory(nextHistory);
+      localStorage.setItem('tempest_liked_history', JSON.stringify(nextHistory));
     } else {
       // Pinning/Liking gives 3 points
       updatedPinned = [...pinnedIds, id];
@@ -302,11 +365,43 @@ export default function App() {
         { id: `act-${Date.now()}`, text: `Liked "${title}" (+3 Pts)`, time: 'Just now', plus: true },
         ...prev.slice(0, 5)
       ]);
+
+      // Save to likedHistory with current timestamp so it triggers auto-delete exactly after 30 days
+      const newHistoryItem: LikedHistoryItem = {
+        id,
+        title,
+        imageUrl: targetWp ? targetWp.imageUrl : '',
+        likedAt: Date.now(),
+        category: targetWp ? targetWp.category : 'General',
+        character: targetWp ? targetWp.character : 'Unknown'
+      };
+      const nextHistory = [newHistoryItem, ...likedHistory];
+      setLikedHistory(nextHistory);
+      localStorage.setItem('tempest_liked_history', JSON.stringify(nextHistory));
     }
 
     setPinnedIds(updatedPinned);
     localStorage.setItem('tempest_pinned', JSON.stringify(updatedPinned));
     updatePoints(Math.max(0, points + rewardPoints));
+  };
+
+  const handleClearHistory = () => {
+    setPinnedIds([]);
+    setLikedHistory([]);
+    localStorage.setItem('tempest_pinned', JSON.stringify([]));
+    localStorage.setItem('tempest_liked_history', JSON.stringify([]));
+    
+    setRecentActions(prev => [
+      { id: `clear-hist-${Date.now()}`, text: 'Cleared all Liked History logs', time: 'Just now', plus: false },
+      ...prev.slice(0, 5)
+    ]);
+  };
+
+  const handleViewFromHistory = (id: string) => {
+    const wp = wallpapers.find(w => w.id === id) || INITIAL_WALLPAPERS.find(w => w.id === id);
+    if (wp) {
+      setSelectedWallpaper(wp);
+    }
   };
 
   const handleRedeemCode = (newCode: RedemptionCode) => {
@@ -678,6 +773,14 @@ export default function App() {
                   <Heart className="w-3.5 h-3.5 fill-current text-rose-500" />
                   <span>Liked ({pinnedIds.length})</span>
                 </button>
+                <button
+                  onClick={() => setIsHistoryOpen(true)}
+                  className="px-3 py-1.5 rounded-md text-[10px] uppercase tracking-wider font-extrabold transition-all cursor-pointer flex items-center gap-1.5 text-slate-400 hover:text-amber-400 hover:bg-slate-850/60"
+                  title="View already liked 30-day chronological history cache"
+                >
+                  <History className="w-3.5 h-3.5 text-amber-500" />
+                  <span>History ({likedHistory.length})</span>
+                </button>
               </div>
             </div>
             
@@ -821,6 +924,15 @@ export default function App() {
         onClose={() => setSelectedWallpaper(null)}
         onPin={handlePin}
         isPinned={!!selectedWallpaper && pinnedIds.includes(selectedWallpaper.id)}
+      />
+
+      <LikedHistoryModal
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        likedHistory={likedHistory}
+        onUnlike={(id, e) => handlePin(id, e)}
+        onView={handleViewFromHistory}
+        onClearAll={handleClearHistory}
       />
 
       {/* Floating Action Bubbles System */}
