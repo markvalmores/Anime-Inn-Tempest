@@ -1,0 +1,6 @@
+{
+  "name": "Anime Inn Tempest",
+  "description": "your one stop shop to earn while liking your HOBBY",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
