@@ -124,7 +124,7 @@ export default function App() {
 
   // New States for Floating Bubbles & Smart Filter Refreshing
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
-  const [showLikedFilter, setShowLikedFilter] = useState<'all' | 'liked' | 'hideLiked'>('all');
+  const [showLikedFilter, setShowLikedFilter] = useState<'all' | 'liked' | 'hideLiked'>('hideLiked');
 
   // Live indicators
   const [stats] = useState({
@@ -395,7 +395,8 @@ export default function App() {
     let matchesLikedFilter = true;
     if (showLikedFilter === 'liked') {
       matchesLikedFilter = isPinned;
-    } else if (showLikedFilter === 'hideLiked') {
+    } else {
+      // By default or 'hideLiked', exclude liked/saved items completely so the feed stays fresh!
       matchesLikedFilter = !isPinned;
     }
 
@@ -654,38 +655,28 @@ export default function App() {
               {/* Liked & Unliked Filtration Toggles to prevent bulk lookups */}
               <div className="flex items-center bg-slate-900/80 p-0.5 rounded-lg border border-slate-800 shrink-0 ml-0 lg:ml-2">
                 <button
-                  onClick={() => setShowLikedFilter('all')}
-                  className={`px-2.5 py-1 rounded-md text-[10px] uppercase tracking-wider font-extrabold transition-all cursor-pointer ${
-                    showLikedFilter === 'all'
+                  onClick={() => setShowLikedFilter('hideLiked')}
+                  className={`px-3 py-1.5 rounded-md text-[10px] uppercase tracking-wider font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    showLikedFilter === 'hideLiked'
                       ? 'bg-indigo-500 text-slate-950 shadow-sm'
-                      : 'text-slate-450 hover:text-slate-250'
+                      : 'text-slate-400 hover:text-slate-200'
                   }`}
-                  title="Show All Images"
+                  title="Show only fresh wallpapers you haven't liked yet"
                 >
-                  All feed
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <span>Fresh Feed</span>
                 </button>
                 <button
                   onClick={() => setShowLikedFilter('liked')}
-                  className={`px-2.5 py-1 rounded-md text-[10px] uppercase tracking-wider font-extrabold transition-all cursor-pointer flex items-center gap-1 ${
+                  className={`px-3 py-1.5 rounded-md text-[10px] uppercase tracking-wider font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
                     showLikedFilter === 'liked'
                       ? 'bg-indigo-500 text-slate-950 shadow-sm'
-                      : 'text-slate-450 hover:text-slate-250'
+                      : 'text-slate-400 hover:text-indigo-400'
                   }`}
                   title="Show Liked Images Only"
                 >
-                  <Heart className="w-3 h-3 fill-current" />
-                  <span>({pinnedIds.length})</span>
-                </button>
-                <button
-                  onClick={() => setShowLikedFilter('hideLiked')}
-                  className={`px-2.5 py-1 rounded-md text-[10px] uppercase tracking-wider font-extrabold transition-all cursor-pointer ${
-                    showLikedFilter === 'hideLiked'
-                      ? 'bg-indigo-500 text-slate-950 shadow-sm'
-                      : 'text-slate-450 hover:text-red-400'
-                  }`}
-                  title="Filter out already liked/saved items"
-                >
-                  Hide Liked
+                  <Heart className="w-3.5 h-3.5 fill-current text-rose-500" />
+                  <span>Liked ({pinnedIds.length})</span>
                 </button>
               </div>
             </div>
