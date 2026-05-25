@@ -8,6 +8,7 @@ interface WallpaperDetailModalProps {
   onClose: () => void;
   onPin: (id: string, e: React.MouseEvent) => void;
   isPinned: boolean;
+  isDailyLimitReached?: boolean;
 }
 
 export default function WallpaperDetailModal({
@@ -15,6 +16,7 @@ export default function WallpaperDetailModal({
   onClose,
   onPin,
   isPinned,
+  isDailyLimitReached = false,
 }: WallpaperDetailModalProps) {
   const [downloading, setDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
@@ -145,11 +147,14 @@ export default function WallpaperDetailModal({
               className={`flex-1 py-3 px-4 rounded-xl font-extrabold text-sm transition-all select-none flex items-center justify-center gap-2 border cursor-pointer ${
                 isPinned
                   ? 'bg-indigo-600/20 text-indigo-400 border-indigo-500/40'
+                  : isDailyLimitReached
+                  ? 'bg-rose-600 text-white border-rose-500/30 hover:bg-rose-700 cursor-not-allowed shadow-md shadow-rose-900/10'
                   : 'bg-indigo-500 text-slate-950 border-transparent hover:bg-indigo-400 active:scale-98 shadow-md shadow-indigo-500/10'
               }`}
+              title={isPinned ? 'Liked Already' : isDailyLimitReached ? 'Daily limit of 100 reached! resets at 12 AM Tokyo time JST.' : 'Liking this wallpaper grants 3 points!'}
             >
-              <Plus className={`w-4 h-4 transition-transform ${isPinned ? 'rotate-45' : ''}`} />
-              <span>{isPinned ? '+Pinned (+3 Pts)' : '+in Wallpaper (+3 Pts)'}</span>
+              <Plus className={`w-4 h-4 transition-transform ${isPinned ? 'rotate-45' : isDailyLimitReached ? 'rotate-90 text-rose-200' : ''}`} />
+              <span>{isPinned ? '+Pinned (+3 Pts)' : isDailyLimitReached ? 'Limit Reached ✖' : '+in Wallpaper (+3 Pts)'}</span>
             </button>
 
             {/* Download Button */}

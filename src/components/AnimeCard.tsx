@@ -10,6 +10,7 @@ interface AnimeCardProps {
   onPin: (id: string, e: React.MouseEvent) => void;
   isPinned: boolean;
   onLoadError?: (id: string) => void;
+  isDailyLimitReached?: boolean;
 }
 
 export default function AnimeCard({
@@ -18,6 +19,7 @@ export default function AnimeCard({
   onPin,
   isPinned,
   onLoadError,
+  isDailyLimitReached = false,
 }: AnimeCardProps) {
   const [clickSparks, setClickSparks] = useState<{ id: number; x: number; y: number }[]>([]);
   const [sparkCount, setSparkCount] = useState(0);
@@ -25,6 +27,13 @@ export default function AnimeCard({
 
   const handlePinAction = (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    // If daily limit is reached and they try to plus in a new like, call onPin but skip spark creation
+    if (isDailyLimitReached && !isPinned) {
+      onPin(wallpaper.id, e);
+      return;
+    }
+
     onPin(wallpaper.id, e);
 
     // Dynamic floating spark click position (offset relative to visual viewport button click)
@@ -121,15 +130,17 @@ export default function AnimeCard({
         <div className="absolute top-3 right-3 z-20">
           <button
             onClick={handlePinAction}
-            className={`relative flex items-center gap-1.5 py-2 px-3 text-[11px] font-black rounded-lg transition-all shadow-lg cursor-pointer transform h-8 select-none ${
+            className={`relative flex items-center gap-1.5 py-2 px-3 text-[11px] font-black rounded-lg transition-all shadow-lg transform h-8 select-none ${
               isPinned
-                ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white border border-indigo-400/40'
-                : 'bg-indigo-500 hover:bg-indigo-400 text-slate-950 border border-transparent active:scale-95'
+                ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white border border-indigo-400/40 cursor-pointer active:scale-95'
+                : isDailyLimitReached
+                ? 'bg-rose-600 hover:bg-rose-700 text-white border border-rose-500/30 cursor-not-allowed shadow-rose-900/40'
+                : 'bg-indigo-500 hover:bg-indigo-400 text-slate-950 border border-transparent cursor-pointer active:scale-95'
             }`}
-            title="Liking this wallpaper grants 3 points!"
+            title={isPinned ? 'Liked' : isDailyLimitReached ? 'Daily limit of 100 reached! Resets at 12 AM Tokyo standard time JST.' : 'Liking this wallpaper grants 3 points!'}
           >
-            <Plus className={`w-3.5 h-3.5 transition-transform duration-200 stroke-[2.5] ${isPinned ? 'rotate-45' : ''}`} />
-            <span>{isPinned ? 'Liked' : '+in'}</span>
+            <Plus className={`w-3.5 h-3.5 transition-transform duration-200 stroke-[2.5] ${isPinned ? 'rotate-45' : isDailyLimitReached ? 'rotate-90 text-rose-200' : ''}`} />
+            <span>{isPinned ? 'Liked' : isDailyLimitReached ? 'Limit ✖' : '+in'}</span>
           </button>
         </div>
 

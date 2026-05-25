@@ -94,6 +94,22 @@ export const getJstTimeInfo = () => {
   }
 };
 
+export const getJstDateString = (timestamp: number) => {
+  try {
+    const jstFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Tokyo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const parts = jstFormatter.formatToParts(new Date(timestamp));
+    const partMap = Object.fromEntries(parts.map(p => [p.type, p.value]));
+    return `${partMap.year}-${partMap.month}-${partMap.day}`;
+  } catch (_) {
+    return new Date(timestamp).toISOString().split('T')[0];
+  }
+};
+
 export default function App() {
   const [wallpapers, setWallpapers] = useState<AnimeWallpaper[]>(INITIAL_WALLPAPERS);
   const [activeCategory, setActiveCategory] = useState<string>('All');
@@ -115,6 +131,8 @@ export default function App() {
   const [lastClaimDate, setLastClaimDate] = useState<string>('');
   const [countdown, setCountdown] = useState<string>('24:00:00');
   const [showDaysGrid, setShowDaysGrid] = useState<boolean>(false);
+  const [dailyLikesCount, setDailyLikesCount] = useState<number>(0);
+  const [dailyLikesDate, setDailyLikesDate] = useState<string>('');
 
   // Modal control states
   const [selectedWallpaper, setSelectedWallpaper] = useState<AnimeWallpaper | null>(null);
@@ -220,8 +238,24 @@ export default function App() {
 
     // Initial JST setup
     try {
-      const { countdownStr } = getJstTimeInfo();
+      const { countdownStr, jstTodayStr } = getJstTimeInfo();
       setCountdown(countdownStr);
+
+      // Load or initialize daily likes count according to JST Tokyo date
+      const savedDailyLikesDate = localStorage.getItem('tempest_daily_likes_date');
+      const savedDailyLikesCount = localStorage.getItem('tempest_daily_likes_count');
+
+      if (savedDailyLikesDate === jstTodayStr) {
+        if (savedDailyLikesCount) {
+          setDailyLikesCount(parseInt(savedDailyLikesCount, 10));
+        }
+        setDailyLikesDate(jstTodayStr);
+      } else {
+        setDailyLikesCount(0);
+        setDailyLikesDate(jstTodayStr);
+        localStorage.setItem('tempest_daily_likes_date', jstTodayStr);
+        localStorage.setItem('tempest_daily_likes_count', '0');
+      }
     } catch (_) {}
   }, []);
 
@@ -229,12 +263,28 @@ export default function App() {
   useEffect(() => {
     const timer = setInterval(() => {
       try {
-        const { countdownStr } = getJstTimeInfo();
+        const { countdownStr, jstTodayStr } = getJstTimeInfo();
         setCountdown(countdownStr);
+
+        // Check if the Tokyo JST day shifted to reset daily likes count
+        setDailyLikesDate((currentDate) => {
+          if (currentDate && currentDate !== jstTodayStr) {
+            setDailyLikesCount(0);
+            localStorage.setItem('tempest_daily_likes_date', jstTodayStr);
+            localStorage.setItem('tempest_daily_likes_count', '0');
+            
+            setRecentActions(prev => [
+              { id: `daychange-${Date.now()}`, text: 'Tokyo Midnight! Daily count resettled.', time: 'Just now', plus: false },
+              ...prev.slice(0, 5)
+            ]);
+            return jstTodayStr;
+          }
+          return currentDate || jstTodayStr;
+        });
       } catch (err) {
         console.warn(err);
       }
-    }, 1000);
+    }, 1005);
     return () => clearInterval(timer);
   }, []);
 
@@ -342,6 +392,18 @@ export default function App() {
 
     if (pinnedIds.includes(id)) {
       // Unliking
+      // If the entry was liked today, decrement daily count
+      const histItem = likedHistory.find(item => item.id === id);
+      if (histItem) {
+        const itemJstDate = getJstDateString(histItem.likedAt);
+        const { jstTodayStr } = getJstTimeInfo();
+        if (itemJstDate === jstTodayStr) {
+          const nextCount = Math.max(0, dailyLikesCount - 1);
+          setDailyLikesCount(nextCount);
+          localStorage.setItem('tempest_daily_likes_count', nextCount.toString());
+        }
+      }
+
       updatedPinned = pinnedIds.filter((p) => p !== id);
       rewardPoints = -3;
       setRecentActions(prev => [
@@ -354,6 +416,15 @@ export default function App() {
       setLikedHistory(nextHistory);
       localStorage.setItem('tempest_liked_history', JSON.stringify(nextHistory));
     } else {
+      // Pinning/Liking check daily limit of 100 first
+      if (dailyLikesCount >= 100) {
+        setRecentActions(prev => [
+          { id: `err-${Date.now()}`, text: '100 Like Limit reached! Resets at midnight JST', time: 'Just now', plus: false },
+          ...prev.slice(0, 5)
+        ]);
+        return;
+      }
+
       // Pinning/Liking gives 3 points
       updatedPinned = [...pinnedIds, id];
       rewardPoints = 3;
@@ -361,6 +432,10 @@ export default function App() {
         { id: `act-${Date.now()}`, text: `Liked "${title}" (+3 Pts)`, time: 'Just now', plus: true },
         ...prev.slice(0, 5)
       ]);
+
+      const nextCount = dailyLikesCount + 1;
+      setDailyLikesCount(nextCount);
+      localStorage.setItem('tempest_daily_likes_count', nextCount.toString());
 
       // Save to likedHistory with current timestamp so it triggers auto-delete exactly after 30 days
       const newHistoryItem: LikedHistoryItem = {
@@ -665,6 +740,36 @@ export default function App() {
               </div>
             </div>
 
+            {/* Daily Like Quota Tracker */}
+            <div className="border-t border-indigo-500/15 pt-4 mt-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10 select-none">
+              <div className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-xl border flex items-center justify-center shrink-0 ${dailyLikesCount >= 100 ? 'bg-rose-500/15 border-rose-500/20 text-rose-400' : 'bg-indigo-600/15 border-indigo-400/20 text-indigo-450'}`}>
+                  <Heart className={`w-5 h-5 ${dailyLikesCount >= 100 ? 'fill-current text-rose-500 animate-pulse' : 'text-indigo-400'}`} />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-100 uppercase tracking-wide flex items-center gap-2">
+                    Daily Pin Limit: <span className={`font-mono font-black ${dailyLikesCount >= 100 ? 'text-rose-400 bg-rose-900/40 px-1.5 py-0.5 rounded border border-rose-500/20' : 'text-indigo-400 bg-indigo-900/40 px-1.5 py-0.5 rounded border border-indigo-500/20'}`}>{dailyLikesCount}/100</span>
+                  </h4>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    {dailyLikesCount >= 100 
+                      ? '100 likes cap reached! Liking is disabled and "+in" buttons are turned red. Resets at midnight.' 
+                      : 'Newly liked wallpapers grant +3 points up to a limit of 100 total likes daily.'
+                    }
+                  </p>
+                </div>
+              </div>
+
+              {/* Quota indicator */}
+              <div className="flex items-center gap-2 self-stretch sm:self-auto justify-between sm:justify-start bg-slate-950/20 px-3 py-1.5 rounded-lg border border-indigo-500/5 sm:border-0 sm:bg-transparent">
+                <div className="flex items-center gap-2">
+                  <span className={`h-2 w-2 rounded-full ${dailyLikesCount >= 100 ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500 animate-ping'}`} />
+                  <span className={`text-[10px] uppercase font-mono font-bold tracking-wider ${dailyLikesCount >= 100 ? 'text-rose-400 font-extrabold' : 'text-emerald-400'}`}>
+                    {dailyLikesCount >= 100 ? 'Limit Active' : 'Allow Likes'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* Quick collapsable link to reveal all 30 days tiles journey */}
             <div className="border-t border-indigo-500/10 pt-4 mt-1 relative z-10">
               <button
@@ -880,6 +985,7 @@ export default function App() {
                 onView={(wp) => setSelectedWallpaper(wp)}
                 onPin={handlePin}
                 isPinned={pinnedIds.includes(wallpaper.id)}
+                isDailyLimitReached={dailyLikesCount >= 100}
                 onLoadError={handleLoadError}
               />
             ))}
@@ -931,6 +1037,7 @@ export default function App() {
         onClose={() => setSelectedWallpaper(null)}
         onPin={handlePin}
         isPinned={!!selectedWallpaper && pinnedIds.includes(selectedWallpaper.id)}
+        isDailyLimitReached={dailyLikesCount >= 100}
       />
 
       <LikedHistoryModal
