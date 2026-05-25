@@ -128,7 +128,9 @@ export default function AnimeCard({
 
         {/* Quick Add Pin Button "+in" */}
         <div className="absolute top-3 right-3 z-20">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={handlePinAction}
             className={`relative flex items-center gap-1.5 py-2 px-3 text-[11px] font-black rounded-lg transition-all shadow-lg transform h-8 select-none ${
               isPinned
@@ -141,7 +143,7 @@ export default function AnimeCard({
           >
             <Plus className={`w-3.5 h-3.5 transition-transform duration-200 stroke-[2.5] ${isPinned ? 'rotate-45' : isDailyLimitReached ? 'rotate-90 text-rose-200' : ''}`} />
             <span>{isPinned ? 'Liked' : isDailyLimitReached ? 'Limit ✖' : '+in'}</span>
-          </button>
+          </motion.button>
         </div>
 
         {/* View Detail Hover Hint Indicator */}

@@ -486,8 +486,6 @@ export default function App() {
     ]);
   };
 
-  // Infinite Scroll Hook removed
-  
   const fetchMoreItems = () => {
     if (loadingMoreRef.current) return;
     loadingMoreRef.current = true;
@@ -526,6 +524,31 @@ export default function App() {
         setLoadingMore(false);
       });
   };
+
+  // Safe Infinite Scroll Trigger using IntersectionObserver
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loadingMoreRef.current) {
+          fetchMoreItems();
+        }
+      },
+      { threshold: 0.1, rootMargin: '200px' }
+    );
+
+    const currentSentinel = sentinelRef.current;
+    if (currentSentinel) {
+      observer.observe(currentSentinel);
+    }
+
+    return () => {
+      if (currentSentinel) {
+        observer.unobserve(currentSentinel);
+      }
+    };
+  }, []); // Only run once on mount
 
   // Keep the callback ref up-to-date synchronously on every render
   useEffect(() => {
@@ -975,13 +998,21 @@ export default function App() {
             ))}
           </div>
 
-          {/* Placeholder for feed end */}
-          <div className="pt-8 pb-12 flex flex-col items-center justify-center gap-3">
+          {/* Infinite Scroll Load Trigger Sentinel */}
+          <div ref={sentinelRef} className="pt-8 pb-12 flex flex-col items-center justify-center gap-3">
              {loadingMore ? (
-              <div className="flex flex-col items-center gap-2 select-none">
-                <div className="w-8 h-8 rounded-full border-4 border-slate-900 border-t-indigo-500 animate-spin" />
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center gap-2 select-none"
+              >
+                <motion.div 
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    className="w-8 h-8 rounded-full border-4 border-slate-900 border-t-indigo-500" 
+                />
                 <span className="text-xs font-semibold tracking-wider text-indigo-400/80 font-mono">Loading more anime visuals...</span>
-              </div>
+              </motion.div>
             ) : (
               <button
                 onClick={fetchMoreItems}

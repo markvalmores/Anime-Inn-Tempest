@@ -142,8 +142,10 @@ export default function WallpaperDetailModal({
           {/* Actions Footer */}
           <div className="pt-6 border-t border-slate-800 mt-6 md:mt-0 flex flex-col sm:flex-row gap-3">
             {/* +in button */}
-            <button
-              onClick={(e) => onPin(wallpaper.id, e)}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handlePin}
               className={`flex-1 py-3 px-4 rounded-xl font-extrabold text-sm transition-all select-none flex items-center justify-center gap-2 border cursor-pointer ${
                 isPinned
                   ? 'bg-indigo-600/20 text-indigo-400 border-indigo-500/40'
@@ -155,7 +157,7 @@ export default function WallpaperDetailModal({
             >
               <Plus className={`w-4 h-4 transition-transform ${isPinned ? 'rotate-45' : isDailyLimitReached ? 'rotate-90 text-rose-200' : ''}`} />
               <span>{isPinned ? '+Pinned (+3 Pts)' : isDailyLimitReached ? 'Limit Reached ✖' : '+in Wallpaper (+3 Pts)'}</span>
-            </button>
+            </motion.button>
 
             {/* Download Button */}
             <button
