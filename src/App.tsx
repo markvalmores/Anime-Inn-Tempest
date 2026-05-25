@@ -128,6 +128,10 @@ export default function App() {
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const loadingMoreRef = useRef<boolean>(false);
 
+  // Refs for stable scroll handling & callback containment
+  const galleryContainerRef = useRef<HTMLElement | null>(null);
+  const fetchMoreItemsRef = useRef<() => void>(() => {});
+
   // New States for Floating Bubbles & Smart Filter Refreshing
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
   const [showLikedFilter, setShowLikedFilter] = useState<'all' | 'liked' | 'hideLiked'>('hideLiked');
@@ -234,27 +238,19 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // Scroll Listener for targeting '#right-gallery-container'
-  useEffect(() => {
-    const container = document.getElementById('right-gallery-container');
-    if (!container) return;
-
-    const handleScroll = () => {
-      if (container.scrollTop > 300) {
-        setShowScrollTop(true);
-      } else {
-        setShowScrollTop(false);
-      }
-    };
-
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, []);
+  // Scroll Handler for right gallery container (prevents DOM document lookups that break on different browsers)
+  const handleGalleryScroll = (e: React.UIEvent<HTMLElement>) => {
+    const target = e.currentTarget;
+    if (target.scrollTop > 300) {
+      setShowScrollTop(true);
+    } else {
+      setShowScrollTop(false);
+    }
+  };
 
   const handleScrollToTop = () => {
-    const container = document.getElementById('right-gallery-container');
-    if (container) {
-      container.scrollTo({
+    if (galleryContainerRef.current) {
+      galleryContainerRef.current.scrollTo({
         top: 0,
         behavior: 'smooth'
       });
@@ -457,19 +453,25 @@ export default function App() {
       });
   };
 
+  // Keep the callback ref up-to-date synchronously on every render
+  useEffect(() => {
+    fetchMoreItemsRef.current = fetchMoreItems;
+  }, [fetchMoreItems]);
+
   // Eagerly populate and stream fresh wallpaper graphics from free APIs on immediate mount
   useEffect(() => {
     fetchMoreItems();
   }, []);
 
+  // Stable single IntersectionObserver setup to prevent infinite loop refresh state cycles on mobile
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          fetchMoreItems();
+          fetchMoreItemsRef.current();
         }
       },
-      { threshold: 0.1, rootMargin: '120px' }
+      { threshold: 0.1, rootMargin: '150px' }
     );
 
     if (sentinelRef.current) {
@@ -477,7 +479,7 @@ export default function App() {
     }
 
     return () => observer.disconnect();
-  }, [loadedOffset, loadingMore]);
+  }, []);
 
   // Filtering Wallpapers by category, tag, and liked check values
   const filteredWallpapers = wallpapers.filter((wp) => {
@@ -605,7 +607,12 @@ export default function App() {
         </aside>
 
         {/* Right Gallery Feed: Showcase Masonry Catalogue Grid */}
-        <section className="flex-1 p-5 md:p-6 overflow-y-auto flex flex-col gap-6" id="right-gallery-container">
+        <section 
+          ref={galleryContainerRef}
+          onScroll={handleGalleryScroll}
+          className="flex-1 p-5 md:p-6 overflow-y-auto flex flex-col gap-6" 
+          id="right-gallery-container"
+        >
           
           {/* Daily Tokyo Time Login Bonus Banner */}
           <div className="relative overflow-hidden bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 rounded-2xl border border-indigo-500/20 p-5 md:p-6 shadow-xl flex flex-col gap-5 select-none shrink-0" id="daily-login-banner">
