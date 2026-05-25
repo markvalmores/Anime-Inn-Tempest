@@ -486,9 +486,8 @@ export default function App() {
     ]);
   };
 
-  // Infinite Scroll Trigger
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-
+  // Infinite Scroll Hook removed
+  
   const fetchMoreItems = () => {
     if (loadingMoreRef.current) return;
     loadingMoreRef.current = true;
@@ -538,31 +537,8 @@ export default function App() {
     fetchMoreItems();
   }, []);
 
-  // Stable single IntersectionObserver setup to prevent infinite loop refresh state cycles on mobile
-  useEffect(() => {
-    // Only set up intersection observer if we have a sentinel ref
-    if (!sentinelRef.current) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // Use functional state updates for loadingMore, and check ref directly
-        if (entries[0].isIntersecting && !loadingMoreRef.current) {
-          fetchMoreItemsRef.current();
-        }
-      },
-      { threshold: 0.1, rootMargin: '300px' } 
-    );
-
-    observer.observe(sentinelRef.current);
-
-    return () => observer.disconnect();
-  }, []);
-
-  // Sync loading state to a ref for the observer
-  const loadingRef = useRef<boolean>(false);
-  useEffect(() => {
-    loadingRef.current = loadingMore;
-  }, [loadingMore]);
+  // Removed problematic IntersectionObserver to fix infinite loop refresh cycles.
+  // We now rely on explicit user actions for refreshing like the "Refresh Feed" button.
 
   // Filtering Wallpapers by category, tag, and liked check values
   const filteredWallpapers = wallpapers.filter((wp) => {
@@ -999,9 +975,9 @@ export default function App() {
             ))}
           </div>
 
-          {/* Infinite Scroll Load Trigger Sentinel */}
-          <div ref={sentinelRef} className="pt-8 pb-12 flex flex-col items-center justify-center gap-3">
-            {loadingMore ? (
+          {/* Placeholder for feed end */}
+          <div className="pt-8 pb-12 flex flex-col items-center justify-center gap-3">
+             {loadingMore ? (
               <div className="flex flex-col items-center gap-2 select-none">
                 <div className="w-8 h-8 rounded-full border-4 border-slate-900 border-t-indigo-500 animate-spin" />
                 <span className="text-xs font-semibold tracking-wider text-indigo-400/80 font-mono">Loading more anime visuals...</span>
@@ -1011,7 +987,7 @@ export default function App() {
                 onClick={fetchMoreItems}
                 className="py-2.5 px-6 rounded-full border border-slate-800 bg-slate-900 hover:bg-slate-850 hover:border-slate-700 font-bold text-xs text-slate-450 hover:text-slate-250 transition-all select-none cursor-pointer active:scale-97"
               >
-                Scroll down to unveil infinite pictures safely
+                Load more wallpapers
               </button>
             )}
           </div>
