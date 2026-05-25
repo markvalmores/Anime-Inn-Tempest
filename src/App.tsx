@@ -512,7 +512,10 @@ export default function App() {
             }
             return item;
           });
-          return [...prev, ...uniqueNewItems];
+          const updated = [...prev, ...uniqueNewItems];
+          // Cache the latest 100 wallpapers
+          localStorage.setItem('cached_wallpapers', JSON.stringify(updated.slice(-100)));
+          return updated;
         });
         setLoadedOffset(loadedOffsetRef.current);
       })
@@ -556,8 +559,19 @@ export default function App() {
   }, [fetchMoreItems]);
 
   // Eagerly populate and stream fresh wallpaper graphics from free APIs on immediate mount
+  // Preload from cache first if available
   useEffect(() => {
-    fetchMoreItems();
+    const cached = localStorage.getItem('cached_wallpapers');
+    if (cached) {
+      try {
+        setWallpapers(JSON.parse(cached));
+      } catch (e) {
+        console.error("Cache parsing error", e);
+        fetchMoreItems();
+      }
+    } else {
+      fetchMoreItems();
+    }
   }, []);
 
   // Removed problematic IntersectionObserver to fix infinite loop refresh cycles.

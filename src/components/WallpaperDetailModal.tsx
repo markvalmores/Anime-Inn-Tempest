@@ -145,7 +145,7 @@ export default function WallpaperDetailModal({
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={handlePin}
+              onClick={(e) => onPin(wallpaper.id, e)}
               className={`flex-1 py-3 px-4 rounded-xl font-extrabold text-sm transition-all select-none flex items-center justify-center gap-2 border cursor-pointer ${
                 isPinned
                   ? 'bg-indigo-600/20 text-indigo-400 border-indigo-500/40'
