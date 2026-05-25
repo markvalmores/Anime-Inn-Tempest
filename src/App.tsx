@@ -540,21 +540,29 @@ export default function App() {
 
   // Stable single IntersectionObserver setup to prevent infinite loop refresh state cycles on mobile
   useEffect(() => {
+    // Only set up intersection observer if we have a sentinel ref
+    if (!sentinelRef.current) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
+        // Use functional state updates for loadingMore, and check ref directly
+        if (entries[0].isIntersecting && !loadingMoreRef.current) {
           fetchMoreItemsRef.current();
         }
       },
-      { threshold: 0.1, rootMargin: '150px' }
+      { threshold: 0.1, rootMargin: '300px' } 
     );
 
-    if (sentinelRef.current) {
-      observer.observe(sentinelRef.current);
-    }
+    observer.observe(sentinelRef.current);
 
     return () => observer.disconnect();
   }, []);
+
+  // Sync loading state to a ref for the observer
+  const loadingRef = useRef<boolean>(false);
+  useEffect(() => {
+    loadingRef.current = loadingMore;
+  }, [loadingMore]);
 
   // Filtering Wallpapers by category, tag, and liked check values
   const filteredWallpapers = wallpapers.filter((wp) => {
