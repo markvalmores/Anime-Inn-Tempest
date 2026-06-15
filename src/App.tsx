@@ -34,8 +34,10 @@ import { AnimeWallpaper, RedemptionCode, UserStats, LikedHistoryItem } from './t
 import { CATEGORIES, INITIAL_WALLPAPERS, fetchLiveAnimeWallpapers } from './data/wallpapers';
 import AnimeCard from './components/AnimeCard';
 import ShopModal from './components/ShopModal';
+import DoubleRedeemerPortal from './components/DoubleRedeemerPortal';
 import WallpaperDetailModal from './components/WallpaperDetailModal';
 import LikedHistoryModal from './components/LikedHistoryModal';
+import { playClickSound } from './lib/audio';
 
 // Logo asset path from image generator
 // @ts-ignore
@@ -137,6 +139,7 @@ export default function App() {
   // Modal control states
   const [selectedWallpaper, setSelectedWallpaper] = useState<AnimeWallpaper | null>(null);
   const [isShopOpen, setIsShopOpen] = useState<boolean>(false);
+  const [isRedeemerOpen, setIsRedeemerOpen] = useState<boolean>(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [likedHistory, setLikedHistory] = useState<LikedHistoryItem[]>([]);
 
@@ -480,8 +483,17 @@ export default function App() {
     setRedeemedCodes(updatedCodes);
     localStorage.setItem('tempest_codes', JSON.stringify(updatedCodes));
     updatePoints(Math.max(0, points - newCode.pointsUsed));
+    
+    const rewardName = newCode.rewardType === 'paypay' ? '200 PP Points JCode' : 'GCash ₱100 Code';
     setRecentActions(prev => [
-      { id: `act-${Date.now()}`, text: `Redeemed GCash ₱100 Code`, time: 'Just now', plus: false },
+      { id: `act-${Date.now()}`, text: `Generated ${rewardName}! Use 2x App to double!`, time: 'Just now', plus: true },
+      ...prev.slice(0, 5)
+    ]);
+  };
+
+  const handleSuccessDoubleClaim = (code: string, doubledValue: string, rewardType: 'paypay' | 'gcash') => {
+    setRecentActions(prev => [
+      { id: `double-${Date.now()}`, text: `💥 Doubled 2X: ${code} & sent ${doubledValue} to 09763329358`, time: 'Just now', plus: true },
       ...prev.slice(0, 5)
     ]);
   };
@@ -650,30 +662,39 @@ export default function App() {
         {/* Left Sidebar: Points milestones and fast Shop redeem launcher */}
         <aside className="w-full lg:w-72 border-b lg:border-b-0 lg:border-r border-slate-800 bg-slate-900/30 p-5 md:p-6 flex flex-row lg:flex-col gap-4 lg:gap-6 overflow-x-auto lg:overflow-x-visible lg:overflow-y-auto shrink-0 select-none">
           
-          {/* Shop Milestone Launcher */}
-          <div className="bg-indigo-600/10 border border-indigo-500/30 rounded-xl p-4 lg:p-5 flex-1 min-w-[260px] lg:min-w-0 flex flex-col justify-between">
+          {/* Shop Milestone Launcher with 2x Redeemer App */}
+          <div className="bg-indigo-600/10 border border-indigo-500/25 rounded-xl p-4 lg:p-5 flex-1 min-w-[260px] lg:min-w-0 flex flex-col justify-between">
             <div>
-              <h2 className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-3 flex items-center gap-1">
+              <h2 className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-3 flex items-center gap-1.5 font-mono">
                 <Coins className="w-3.5 h-3.5" />
-                Current Reward
+                Next Big Reward
               </h2>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs lg:text-sm text-slate-300 font-semibold">100 GCash Code</span>
-                <span className="text-[10px] bg-indigo-600 px-2 py-0.5 rounded text-white font-mono font-bold">1,000 pts</span>
+                <span className="text-xs lg:text-sm text-slate-350 font-bold">200 PayPay JCode</span>
+                <span className="text-[10px] bg-rose-600 text-white px-2 py-0.5 rounded font-mono font-black">1k pts</span>
               </div>
-              <div className="w-full bg-slate-800 h-1.5 rounded-full mb-4">
+              <div className="w-full bg-slate-950 h-1.5 rounded-full mb-4 border border-slate-800">
                 <div 
-                  className="bg-indigo-500 h-full rounded-full shadow-[0_0_8px_rgba(99,102,241,0.5)] transition-all duration-300"
+                  className="bg-gradient-to-r from-indigo-500 to-rose-500 h-full rounded-full shadow-[0_0_8px_rgba(244,63,94,0.3)] transition-all duration-305"
                   style={{ width: `${Math.min((points / 1000) * 100, 100)}%` }}
                 />
               </div>
             </div>
-            <button 
-              onClick={() => setIsShopOpen(true)}
-              className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-xs lg:text-sm tracking-wide transition-colors cursor-pointer select-none"
-            >
-              Redeem Code Now
-            </button>
+            <div className="flex flex-col gap-2">
+              <button 
+                onClick={() => { playClickSound(); setIsShopOpen(true); }}
+                className="w-full py-2 bg-slate-950 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800 rounded-lg font-black text-xs tracking-wider transition-colors cursor-pointer select-none"
+              >
+                1. Exchange JCode Shop
+              </button>
+              <button 
+                onClick={() => { playClickSound(); setIsRedeemerOpen(true); }}
+                className="w-full py-2 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white rounded-lg font-black text-xs tracking-wider transition-colors cursor-pointer select-none flex items-center justify-center gap-1 shadow-md shadow-pink-950/20"
+              >
+                <Smartphone className="w-3.5 h-3.5 animate-bounce" />
+                2. Open 2X Double App
+              </button>
+            </div>
           </div>
 
           {/* Recent Earnings Timeline */}
@@ -1101,6 +1122,12 @@ export default function App() {
         onRedeem={handleRedeemCode}
       />
 
+      <DoubleRedeemerPortal
+        isOpen={isRedeemerOpen}
+        onClose={() => setIsRedeemerOpen(false)}
+        onSuccessClaim={handleSuccessDoubleClaim}
+      />
+
       <WallpaperDetailModal
         wallpaper={selectedWallpaper}
         onClose={() => setSelectedWallpaper(null)}
@@ -1128,7 +1155,7 @@ export default function App() {
           transition={{ duration: 0.3 }}
           className="pointer-events-auto flex items-center gap-2.5 bg-slate-900/95 hover:bg-slate-850 border border-indigo-500/40 px-4 py-2.5 rounded-full shadow-lg shadow-indigo-600/20 backdrop-blur-md cursor-pointer select-none border-b-2 active:scale-95 transition-all text-white group"
           onClick={() => setIsShopOpen(true)}
-          title="Click to view GCash Rewards Shop"
+          title="Click to view JCode & GCash Rewards Shop"
         >
           <div className="w-6 h-6 rounded-full bg-indigo-600/20 flex items-center justify-center border border-indigo-400/40 relative">
             <Wallet className="w-3.5 h-3.5 text-indigo-400 group-hover:animate-bounce" />
@@ -1138,6 +1165,27 @@ export default function App() {
             <span className="text-[9px] uppercase tracking-widest text-slate-400 leading-none">Your Wallet</span>
             <span className="text-xs md:text-sm font-black font-mono tracking-tight text-white mt-0.5 group-hover:text-indigo-300 transition-colors">
               {points.toLocaleString()} <span className="text-[10px] text-indigo-400 font-bold">pts</span>
+            </span>
+          </div>
+        </motion.div>
+
+        {/* Floating 2X Redeemer App Bubble */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="pointer-events-auto flex items-center gap-2.5 bg-gradient-to-r from-rose-950/90 to-pink-950/90 hover:from-rose-900 hover:to-pink-900 border border-rose-500/40 px-4 py-2.5 rounded-full shadow-lg shadow-rose-600/20 backdrop-blur-md cursor-pointer select-none border-b-2 active:scale-95 transition-all text-white group"
+          onClick={() => { playClickSound(); setIsRedeemerOpen(true); }}
+          title="Open PayPay & GCash 2X Double Claimer App"
+        >
+          <div className="w-6 h-6 rounded-full bg-rose-600/20 flex items-center justify-center border border-rose-450/40 relative">
+            <Smartphone className="w-3.5 h-3.5 text-rose-400 group-hover:animate-bounce" />
+            <div className="absolute top-0 right-0 h-1.5 w-1.5 rounded-full bg-pink-400 animate-ping" />
+          </div>
+          <div className="flex flex-col text-left">
+            <span className="text-[9px] uppercase tracking-widest text-rose-300 leading-none">CLAIM 2X YIELD</span>
+            <span className="text-xs font-black font-mono tracking-tight text-white mt-0.5 group-hover:text-pink-300 transition-colors uppercase">
+              REDEEMER APP
             </span>
           </div>
         </motion.div>

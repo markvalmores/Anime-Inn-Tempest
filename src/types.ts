@@ -14,10 +14,12 @@ export interface AnimeWallpaper {
 export interface RedemptionCode {
   id: string;
   code: string;
-  amountGcash: number;
+  amountGcash?: number;
+  amountPaypay?: number;
   pointsUsed: number;
   redeemedAt: string;
   status: 'active' | 'claimed';
+  rewardType?: 'gcash' | 'paypay';
 }
 
 export interface UserStats {
