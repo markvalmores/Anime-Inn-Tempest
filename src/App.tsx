@@ -596,6 +596,12 @@ export default function App() {
     return isNotBroken && matchesCategory && matchesTag && matchesLikedFilter;
   });
 
+  // Circular progress ring calculations for Daily Like Quota Tracker
+  const progressRadius = 20;
+  const progressCircumference = 2 * Math.PI * progressRadius;
+  const progressPercentage = Math.min((dailyLikesCount / 100) * 100, 100);
+  const progressStrokeDashoffset = progressCircumference - (progressPercentage / 100) * progressCircumference;
+
   return (
     <div className="w-full h-screen bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden">
       
@@ -764,8 +770,42 @@ export default function App() {
             {/* Daily Like Quota Tracker */}
             <div className="border-t border-indigo-500/15 pt-4 mt-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10 select-none">
               <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-xl border flex items-center justify-center shrink-0 ${dailyLikesCount >= 100 ? 'bg-rose-500/15 border-rose-500/20 text-rose-400' : 'bg-indigo-600/15 border-indigo-400/20 text-indigo-450'}`}>
-                  <Heart className={`w-5 h-5 ${dailyLikesCount >= 100 ? 'fill-current text-rose-500 animate-pulse' : 'text-indigo-400'}`} />
+                <div className="relative w-12 h-12 flex items-center justify-center select-none shrink-0">
+                  {/* SVG progress ring around the heart */}
+                  <svg className="absolute w-full h-full transform -rotate-90 pointer-events-none" viewBox="0 0 48 48">
+                    {/* Background Track Circle */}
+                    <circle
+                      cx="24"
+                      cy="24"
+                      r="19"
+                      className="stroke-slate-800"
+                      strokeWidth="3"
+                      fill="none"
+                    />
+                    {/* Active Progress Circle */}
+                    <motion.circle
+                      cx="24"
+                      cy="24"
+                      r="19"
+                      className={dailyLikesCount >= 100 ? "stroke-rose-500" : "stroke-indigo-400"}
+                      strokeWidth="3.2"
+                      fill="none"
+                      strokeLinecap="round"
+                      animate={{ strokeDashoffset: progressStrokeDashoffset }}
+                      style={{
+                        strokeDasharray: progressCircumference,
+                      }}
+                      transition={{ 
+                        type: "spring", 
+                        stiffness: 80, 
+                        damping: 15,
+                        mass: 0.8
+                      }}
+                    />
+                  </svg>
+                  <div className={`p-2 rounded-full flex items-center justify-center shrink-0 z-10 transition-all duration-300 ${dailyLikesCount >= 100 ? 'bg-rose-500/15 text-rose-400' : 'bg-indigo-600/10 text-indigo-400'}`}>
+                    <Heart className={`w-4.5 h-4.5 ${dailyLikesCount >= 100 ? 'fill-current text-rose-500 animate-pulse' : 'text-indigo-400'}`} />
+                  </div>
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-slate-100 uppercase tracking-wide flex items-center gap-2">
