@@ -113,6 +113,20 @@ export const getJstDateString = (timestamp: number) => {
 };
 
 export default function App() {
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState<boolean>(true);
+  const [bypassClicks, setBypassClicks] = useState<number>(0);
+
+  const handleBypassClick = () => {
+    setBypassClicks((prev) => {
+      const next = prev + 1;
+      if (next >= 5) {
+        setIsMaintenanceMode(false);
+        return 0;
+      }
+      return next;
+    });
+  };
+
   const [wallpapers, setWallpapers] = useState<AnimeWallpaper[]>(INITIAL_WALLPAPERS);
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [activeTag, setActiveTag] = useState<string>('All Tags');
@@ -617,6 +631,255 @@ export default function App() {
   return (
     <div className="w-full h-screen bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden">
       
+      <AnimatePresence>
+        {isMaintenanceMode && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[99999] bg-slate-950 flex flex-col items-center justify-center p-6 select-none overflow-hidden"
+          >
+            {/* Background glowing gradients */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.15),transparent_70%)] pointer-events-none" />
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.5)_1px,transparent_1px)] bg-[size:32px_32px] opacity-35 pointer-events-none" />
+
+            <div className="relative z-10 w-full max-w-lg flex flex-col items-center text-center space-y-6">
+              {/* Glowing Offline Indicator Badge */}
+              <motion.div
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                className="inline-flex items-center gap-2 bg-rose-500/10 border border-rose-500/30 text-rose-400 px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase font-mono"
+              >
+                <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping" />
+                <span>OFFLINE FOREVER</span>
+              </motion.div>
+
+              {/* Maintenance Headline */}
+              <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white font-display uppercase drop-shadow-[0_4px_12px_rgba(255,255,255,0.15)]">
+                MAINTENANCE
+              </h1>
+
+              {/* Broadcast Message card */}
+              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-2xl backdrop-blur-md w-full">
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-3 font-mono">System Announcement</p>
+                <p className="text-base md:text-lg text-indigo-300 font-extrabold tracking-tight leading-relaxed">
+                  "NOT GONNA GIVE ONLINE MONEY ANYMORE PERIOD"
+                </p>
+              </div>
+
+              {/* Bunny Stage & Animation Wrapper */}
+              <div className="relative w-full max-w-sm h-80 bg-slate-900/40 border border-slate-800/80 rounded-2xl flex flex-col items-center justify-end pb-8 shadow-inner overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-t from-indigo-950/20 to-transparent pointer-events-none" />
+                
+                {/* Floating ambient star sparkles */}
+                <div className="absolute inset-8 pointer-events-none">
+                  {/* Left Star */}
+                  <motion.div
+                    animate={{ y: [0, -10, 0], opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
+                    transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                    className="absolute top-4 left-6"
+                  >
+                    <Sparkles className="w-5 h-5 text-indigo-400" />
+                  </motion.div>
+                  {/* Right Star */}
+                  <motion.div
+                    animate={{ y: [0, -12, 0], opacity: [0.4, 0.8, 0.4], scale: [1, 0.7, 1] }}
+                    transition={{ repeat: Infinity, duration: 2.4, ease: "easeInOut", delay: 0.5 }}
+                    className="absolute top-8 right-6"
+                  >
+                    <Sparkles className="w-4 h-4 text-purple-400" />
+                  </motion.div>
+                  {/* Bottom Star */}
+                  <motion.div
+                    animate={{ scale: [0.7, 1.1, 0.7], opacity: [0.2, 0.9, 0.2] }}
+                    transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut", delay: 0.25 }}
+                    className="absolute bottom-16 left-12"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-pink-400" />
+                  </motion.div>
+                </div>
+
+                {/* ANIMATED DANCING BUNNY VECTOR */}
+                <div className="relative z-10 filter drop-shadow-[0_12px_24px_rgba(139,92,246,0.18)]">
+                  <svg viewBox="0 0 200 210" className="w-48 h-52">
+                    {/* Pulsing Floor Shadow */}
+                    <motion.ellipse
+                      cx="100"
+                      cy="192"
+                      rx="42"
+                      ry="6"
+                      fill="#020617"
+                      animate={{ scaleX: [0.93, 1.07, 0.93], opacity: [0.8, 0.5, 0.8] }}
+                      transition={{ repeat: Infinity, duration: 0.6, ease: "easeInOut" }}
+                    />
+
+                    {/* Wiggling Left Ear */}
+                    <motion.g
+                      animate={{ rotate: [-10, 10, -10] }}
+                      transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+                      style={{ transformOrigin: "45px 85px" }}
+                    >
+                      <ellipse cx="45" cy="50" rx="11" ry="34" fill="#FFFFFF" transform="rotate(-15, 45, 50)" />
+                      <ellipse cx="45" cy="53" rx="5" ry="24" fill="#FFA3B5" transform="rotate(-15, 45, 53)" />
+                    </motion.g>
+
+                    {/* Wiggling Right Ear */}
+                    <motion.g
+                      animate={{ rotate: [10, -10, 10] }}
+                      transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut", delay: 0.2 }}
+                      style={{ transformOrigin: "155px 85px" }}
+                    >
+                      <ellipse cx="155" cy="50" rx="11" ry="34" fill="#FFFFFF" transform="rotate(15, 155, 50)" />
+                      <ellipse cx="155" cy="53" rx="5" ry="24" fill="#FFA3B5" transform="rotate(15, 155, 53)" />
+                    </motion.g>
+
+                    {/* Bobbing Head */}
+                    <motion.g
+                      animate={{ y: [-3, 3, -3] }}
+                      transition={{ repeat: Infinity, duration: 0.6, ease: "easeInOut" }}
+                    >
+                      <circle cx="100" cy="100" r="41" fill="#FFFFFF" />
+                      
+                      {/* Rosy blush cheeks */}
+                      <circle cx="73" cy="111" r="6" fill="#FF8D9C" opacity="0.6" />
+                      <circle cx="127" cy="111" r="6" fill="#FF8D9C" opacity="0.6" />
+
+                      {/* Blinking Eyes */}
+                      <motion.g
+                        animate={{ scaleY: [1, 0.05, 1, 1, 1] }}
+                        transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
+                        style={{ transformOrigin: "100px 100px" }}
+                      >
+                        {/* Left Pupil */}
+                        <circle cx="81" cy="98" r="4" fill="#0F172A" />
+                        <circle cx="79" cy="96" r="1.5" fill="#FFFFFF" />
+                        
+                        {/* Right Pupil */}
+                        <circle cx="119" cy="98" r="4" fill="#0F172A" />
+                        <circle cx="117" cy="96" r="1.5" fill="#FFFFFF" />
+                      </motion.g>
+
+                      {/* Happy mouth & pink nose */}
+                      <polygon points="100,105 97,102 103,102" fill="#FF5E7E" />
+                      <path d="M 96,108 Q 100,111 104,108" stroke="#0F172A" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+                    </motion.g>
+
+                    {/* Sways Body and Arms */}
+                    <motion.g
+                      animate={{ 
+                        rotate: [-5, 5, -5],
+                        skewX: [-2, 2, -2]
+                      }}
+                      transition={{ repeat: Infinity, duration: 0.6, ease: "easeInOut" }}
+                      style={{ transformOrigin: "100px 180px" }}
+                    >
+                      {/* White Pear Body */}
+                      <path d="M 76,134 Q 61,189 100,189 Q 139,189 124,134 Z" fill="#FFFFFF" />
+                      
+                      {/* Red Ribbon Bowtie */}
+                      <polygon points="100,143 91,136 91,150" fill="#F43F5E" />
+                      <polygon points="100,143 109,136 109,150" fill="#F43F5E" />
+                      <circle cx="100" cy="143" r="3" fill="#FFE4E6" />
+
+                      {/* Left Swinging Wave Arm */}
+                      <motion.path
+                        d="M 68,145 Q 42,128 36,143"
+                        stroke="#FFFFFF"
+                        strokeWidth="11"
+                        strokeLinecap="round"
+                        fill="none"
+                        animate={{ rotate: [-24, 24, -24] }}
+                        transition={{ repeat: Infinity, duration: 0.6, ease: "easeInOut" }}
+                        style={{ transformOrigin: "68px 145px" }}
+                      />
+
+                      {/* Right Swinging Wave Arm */}
+                      <motion.path
+                        d="M 132,145 Q 158,128 164,143"
+                        stroke="#FFFFFF"
+                        strokeWidth="11"
+                        strokeLinecap="round"
+                        fill="none"
+                        animate={{ rotate: [24, -24, 24] }}
+                        transition={{ repeat: Infinity, duration: 0.6, ease: "easeInOut", delay: 0.3 }}
+                        style={{ transformOrigin: "132px 145px" }}
+                      />
+                    </motion.g>
+
+                    {/* Alternating Tapping Feet */}
+                    <g>
+                      {/* Left Foot pink pads */}
+                      <motion.ellipse
+                        cx="81"
+                        cy="192"
+                        rx="11"
+                        ry="5.5"
+                        fill="#FFFFFF"
+                        animate={{ y: [0, -5, 0] }}
+                        transition={{ repeat: Infinity, duration: 0.3, ease: "easeInOut" }}
+                      />
+                      <motion.ellipse
+                        cx="81"
+                        cy="192"
+                        rx="6"
+                        ry="2.5"
+                        fill="#FFA3B5"
+                        animate={{ y: [0, -5, 0] }}
+                        transition={{ repeat: Infinity, duration: 0.3, ease: "easeInOut" }}
+                      />
+
+                      {/* Right Foot pink pads */}
+                      <motion.ellipse
+                        cx="119"
+                        cy="192"
+                        rx="11"
+                        ry="5.5"
+                        fill="#FFFFFF"
+                        animate={{ y: [-5, 0, -5] }}
+                        transition={{ repeat: Infinity, duration: 0.3, ease: "easeInOut", delay: 0.15 }}
+                      />
+                      <motion.ellipse
+                        cx="119"
+                        cy="192"
+                        rx="6"
+                        ry="2.5"
+                        fill="#FFA3B5"
+                        animate={{ y: [-5, 0, -5] }}
+                        transition={{ repeat: Infinity, duration: 0.3, ease: "easeInOut", delay: 0.15 }}
+                      />
+                    </g>
+                  </svg>
+                </div>
+
+                <span className="text-[10px] text-slate-500 font-mono tracking-widest mt-4 uppercase animate-pulse">
+                  Dancing Bun Bunny v2.5 Stable
+                </span>
+              </div>
+
+              {/* Hidden System Bypass Indicator at Bottom */}
+              <div 
+                onClick={handleBypassClick}
+                className="pt-8 flex flex-col items-center gap-1.5 cursor-pointer selection:bg-transparent"
+                title="System override key"
+              >
+                <div className="flex items-center gap-2 bg-slate-900/40 hover:bg-slate-900/80 px-3.5 py-1.5 rounded-full border border-slate-800/80 transition-all active:scale-95 text-slate-500 hover:text-slate-400">
+                  <motion.div
+                    animate={{ rotate: bypassClicks > 0 ? bypassClicks * 72 : 0 }}
+                    transition={{ type: "spring", stiffness: 200 }}
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  </motion.div>
+                  <span className="text-[10px] font-mono tracking-wider uppercase font-bold">
+                    {bypassClicks > 0 ? `Bypass active: ${bypassClicks}/5` : 'SECURE SYSTEM ENCRYPTED'}
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Dynamic Navigation matching Geometric Balance styling */}
       <nav className="h-16 border-b border-slate-800 bg-slate-900/50 px-6 flex items-center justify-between shrink-0 select-none">
         <div className="flex items-center gap-3">
