@@ -27,7 +27,8 @@ import {
   Wallet,
   History,
   Trash2,
-  CalendarDays
+  CalendarDays,
+  X
 } from 'lucide-react';
 
 import { AnimeWallpaper, RedemptionCode, UserStats, LikedHistoryItem } from './types';
@@ -644,27 +645,44 @@ export default function App() {
             <div className="absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.5)_1px,transparent_1px)] bg-[size:32px_32px] opacity-35 pointer-events-none" />
 
             <div className="relative z-10 w-full max-w-lg flex flex-col items-center text-center space-y-6">
-              {/* Glowing Offline Indicator Badge */}
+              {/* Glowing Warm Welcome Badge */}
               <motion.div
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                className="inline-flex items-center gap-2 bg-rose-500/10 border border-rose-500/30 text-rose-400 px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase font-mono"
+                className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase font-mono"
               >
-                <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping" />
-                <span>OFFLINE FOREVER</span>
+                <span className="h-2 w-2 rounded-full bg-indigo-500 animate-ping" />
+                <span>ONLINE GIVING PORTAL</span>
               </motion.div>
 
-              {/* Maintenance Headline */}
-              <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white font-display uppercase drop-shadow-[0_4px_12px_rgba(255,255,255,0.15)]">
-                MAINTENANCE
+              {/* Welcome Headline */}
+              <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white font-display uppercase drop-shadow-[0_4px_12px_rgba(99,102,241,0.25)]">
+                WELCOME TO THE ONLY HONEST GIVING APP
               </h1>
 
               {/* Broadcast Message card */}
-              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-2xl backdrop-blur-md w-full">
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-3 font-mono">System Announcement</p>
-                <p className="text-base md:text-lg text-indigo-300 font-extrabold tracking-tight leading-relaxed">
-                  "NOT GONNA GIVE ONLINE MONEY ANYMORE PERIOD"
+              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-2xl backdrop-blur-md w-full relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-mono">System Broadcast</p>
+                <p className="text-sm md:text-base text-slate-300 font-semibold tracking-tight mb-4">
+                  Press the cross to continue the experience
                 </p>
+                
+                {/* Large Interactive Close Cross Button */}
+                <div className="flex justify-center items-center py-2">
+                  <motion.button
+                    whileHover={{ scale: 1.15, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => {
+                      playClickSound();
+                      setIsMaintenanceMode(false);
+                    }}
+                    className="w-16 h-16 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:brightness-110 flex items-center justify-center text-white shadow-xl shadow-indigo-500/20 border border-white/20 cursor-pointer pointer-events-auto"
+                    aria-label="Continue"
+                  >
+                    <X className="w-9 h-9 stroke-[3]" />
+                  </motion.button>
+                </div>
               </div>
 
               {/* Bunny Stage & Animation Wrapper */}
