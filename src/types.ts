@@ -9,6 +9,12 @@ export interface AnimeWallpaper {
   downloads: number;
   saves: number;
   category: string;
+  // Dynamic API specific fields
+  synopsis?: string;
+  rating?: string;
+  malUrl?: string;
+  type?: string;
+  episodes?: number;
 }
 
 export interface RedemptionCode {

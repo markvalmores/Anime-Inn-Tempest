@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { X, Heart, Download, Tag, User, Sparkles, Plus, Image } from 'lucide-react';
+import { X, Heart, Download, Tag, User, Sparkles, Plus, Image, ExternalLink } from 'lucide-react';
 import { AnimeWallpaper } from '../types';
 
 interface WallpaperDetailModalProps {
@@ -108,12 +108,53 @@ export default function WallpaperDetailModal({
               </div>
             </div>
 
+            {/* Dynamic API metadata like rating, format, episodes */}
+            {(wallpaper.rating || wallpaper.type || wallpaper.episodes !== undefined) && (
+              <div className="grid grid-cols-3 gap-2 p-3 bg-slate-950/80 rounded-xl border border-slate-850/70 text-center select-none font-sans">
+                <div>
+                  <span className="block text-[8.5px] text-slate-500 uppercase tracking-wider font-bold">Type</span>
+                  <span className="text-xs font-black text-slate-200 uppercase">{wallpaper.type || 'TV'}</span>
+                </div>
+                <div>
+                  <span className="block text-[8.5px] text-slate-500 uppercase tracking-wider font-bold">Episodes</span>
+                  <span className="text-xs font-black text-slate-200">{wallpaper.episodes !== undefined ? wallpaper.episodes : 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="block text-[8.5px] text-indigo-400 uppercase tracking-wider font-bold">MAL Score</span>
+                  <span className="text-xs font-black text-indigo-300">{wallpaper.rating || '⭐ Rank'}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Synopsis paragraph for live MAL records */}
+            {wallpaper.synopsis && (
+              <div className="space-y-1.5 font-sans bg-slate-950/40 p-3.5 rounded-xl border border-slate-850/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Synopsis</span>
+                  {wallpaper.malUrl && (
+                    <a
+                      href={wallpaper.malUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-indigo-400 hover:text-indigo-300 font-black flex items-center gap-1 transition-all"
+                    >
+                      <span>Official MAL Profile</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-450 leading-relaxed max-h-32 overflow-y-auto select-text font-medium pr-1">
+                  {wallpaper.synopsis}
+                </p>
+              </div>
+            )}
+
             {/* Tags and Character */}
             <div className="space-y-4">
               <div className="flex flex-col gap-1.5">
                 <span className="text-xs text-slate-400 flex items-center gap-1">
                   <User className="w-3.5 h-3.5 text-slate-500" />
-                  Featured Character
+                  Featured Character / Source
                 </span>
                 <span className="text-sm font-bold text-slate-350 select-text">
                   {wallpaper.character || 'Original Design'}
@@ -123,13 +164,13 @@ export default function WallpaperDetailModal({
               <div className="space-y-2">
                 <span className="text-xs text-slate-400 flex items-center gap-1">
                   <Tag className="w-3.5 h-3.5 text-slate-500" />
-                  Keywords
+                  Keywords / Genres
                 </span>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {wallpaper.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="px-2.5 py-1 text-xs bg-slate-800 text-slate-350 rounded-md border border-slate-750 font-medium cursor-default select-all"
+                      className="px-2 py-0.5 text-[10px] bg-slate-800/80 text-slate-350 rounded border border-slate-750 font-medium cursor-default select-all"
                     >
                       #{tag.toLowerCase()}
                     </span>

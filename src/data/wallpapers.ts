@@ -188,8 +188,154 @@ const MOVIE_TITLES = [
   'Koe no Katachi (A Silent Voice) - Bridge Encounter'
 ];
 
+// In-memory caching layer to keep the application lightning-fast and bypass API rate limiting
+let cachedJikanAnime: AnimeWallpaper[] = [];
+let cachedJikanMovies: AnimeWallpaper[] = [];
+let cachedNekosBest: AnimeWallpaper[] = [];
+let isFetchingApis = false;
+
+// Dynamic parallel API client to fetch from several public anime APIs at once
+async function fetchAllPublicApisOnce() {
+  if (cachedJikanAnime.length > 0 && cachedJikanMovies.length > 0 && cachedNekosBest.length > 0) return;
+  if (isFetchingApis) return;
+  isFetchingApis = true;
+
+  try {
+    // 1. Fetch Top Anime from public Jikan MAL API
+    const j1 = fetch('https://api.jikan.moe/v4/top/anime?limit=25')
+      .then(res => {
+        if (!res.ok) throw new Error(`MAL status: ${res.status}`);
+        return res.json();
+      })
+      .then(res => {
+        if (res && Array.isArray(res.data)) {
+          cachedJikanAnime = res.data.map((anime: any, index: number) => {
+            const genres = (anime.genres || []).map((g: any) => g.name);
+            const title = anime.title_english || anime.title;
+            
+            // Map genre tags to application design categories
+            let category = 'Scenic & Sky';
+            if (genres.some((g: string) => /Action|Shounen|Adventure|Martial/i.test(g))) {
+              category = 'Shonen Action';
+            } else if (genres.some((g: string) => /Fantasy|Magic|Supernatural|Demons/i.test(g))) {
+              category = 'Fantasy Magic';
+            } else if (genres.some((g: string) => /Sci-Fi|Cyberpunk|Mecha|Space/i.test(g))) {
+              category = 'Cyberpunk Neon';
+            } else if (genres.some((g: string) => /Slice of Life|Comedy|School|Romance|Music/i.test(g))) {
+              category = 'Lo-Fi Vibe';
+            } else if (genres.some((g: string) => /Arts|Mystery|Suspense|Drama|Avant/i.test(g))) {
+              category = 'Minimalist Art';
+            }
+
+            return {
+              id: `jikan-anime-${anime.mal_id}`,
+              title: title,
+              character: anime.source || 'Featured Character',
+              tags: genres.length > 0 ? genres : ['MAL', 'Anime', 'Hot'],
+              imageUrl: anime.images?.jpg?.large_image_url || anime.images?.webp?.large_image_url || 'https://i.waifu.pics/b6m8GgX.png',
+              aspectRatio: index % 2 === 0 ? 'portrait' : 'landscape',
+              author: (anime.studios || []).map((s: any) => s.name).join(', ') || 'Various Studios',
+              downloads: anime.members ? Math.floor(anime.members / 200) : 2100,
+              saves: anime.score ? Math.floor(anime.score * 120) : 480,
+              category,
+              synopsis: anime.synopsis || 'No details available.',
+              rating: anime.score ? `${anime.score} / 10 MAL` : '⭐ Popular',
+              malUrl: anime.url,
+              type: anime.type || 'TV',
+              episodes: anime.episodes || undefined
+            } as AnimeWallpaper;
+          });
+        }
+      })
+      .catch(e => {
+        console.warn("Soft failure pulling Jikan Top list; fallback ready:", e);
+      });
+
+    // 2. Fetch Top Anime Movies from public Jikan MAL API
+    const j2 = fetch('https://api.jikan.moe/v4/anime?type=movie&order_by=popularity&sort=desc&limit=25')
+      .then(res => {
+        if (!res.ok) throw new Error(`MAL Movies status: ${res.status}`);
+        return res.json();
+      })
+      .then(res => {
+        if (res && Array.isArray(res.data)) {
+          cachedJikanMovies = res.data.map((anime: any, index: number) => {
+            const genres = (anime.genres || []).map((g: any) => g.name);
+            const title = anime.title_english || anime.title;
+            return {
+              id: `jikan-movie-${anime.mal_id}`,
+              title: title,
+              character: anime.source || 'Original Script',
+              tags: genres.length > 0 ? [...genres, 'Cinematic'] : ['AnimeMovie', 'Cinematic', 'MAL'],
+              imageUrl: anime.images?.jpg?.large_image_url || anime.images?.webp?.large_image_url || 'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?w=1200',
+              aspectRatio: 'landscape', // Movies fit beautiful wide cover banners!
+              author: (anime.studios || []).map((s: any) => s.name).join(', ') || 'Toho / CoMix Wave',
+              downloads: anime.members ? Math.floor(anime.members / 100) : 3400,
+              saves: anime.score ? Math.floor(anime.score * 160) : 810,
+              category: 'Anime Movie Specials',
+              synopsis: anime.synopsis || 'No synopsis added.',
+              rating: anime.score ? `${anime.score} / 10 MAL` : '9.1 / 10 Movie',
+              malUrl: anime.url,
+              type: 'Movie',
+              episodes: 1
+            } as AnimeWallpaper;
+          });
+        }
+      })
+      .catch(e => {
+        console.warn("Soft failure pulling Jikan Movies list; fallback ready:", e);
+      });
+
+    // 3. Fetch artwork from Nekos.best SFW API
+    const j3 = fetch('https://nekos.best/api/v2/neko?amount=30')
+      .then(res => {
+        if (!res.ok) throw new Error(`Nekos.best status: ${res.status}`);
+        return res.json();
+      })
+      .then(res => {
+        if (res && Array.isArray(res.results)) {
+          cachedNekosBest = res.results.map((neko: any, index: number) => {
+            const staticNekoTitles = [
+              'Luminous Neko Moonrise Ride',
+              'Celestial Magical Circle Spell',
+              'Vaporwave Shibuya Crossing Sunset',
+              'Cozy Rain Alley Tea Garden',
+              'Dreamy Cherry Blossom Sanctuary'
+            ];
+            const tags = ['ArtistFeatured', 'Neko', 'NekosBestAPI'];
+            const categoriesOptions = ['Minimalist Art', 'Lo-Fi Vibe', 'Scenic & Sky'];
+            return {
+              id: `nekosbest-art-${index}-${Date.now()}`,
+              title: staticNekoTitles[index % staticNekoTitles.length],
+              character: 'Original Waifu Vibe',
+              tags: tags,
+              imageUrl: neko.url,
+              aspectRatio: index % 2 === 0 ? 'portrait' : 'landscape',
+              author: neko.artist_name || 'Anonymous Pixiv Artist',
+              downloads: Math.floor(2100 + (index * 83) % 4500),
+              saves: Math.floor(900 + (index * 39) % 2100),
+              category: categoriesOptions[index % categoriesOptions.length]
+            } as AnimeWallpaper;
+          });
+        }
+      })
+      .catch(e => {
+        console.warn("Soft failure pulling Nekos Best; fallback ready:", e);
+      });
+
+    await Promise.allSettled([j1, j2, j3]);
+  } catch (error) {
+    console.error("General public API fetch sequence failed:", error);
+  } finally {
+    isFetchingApis = false;
+  }
+}
+
 // Highly stable, error-free client-side fetches from free public API endpoints
 export async function fetchLiveAnimeWallpapers(startIndex: number, count: number): Promise<AnimeWallpaper[]> {
+  // Pull live records asynchronously
+  await fetchAllPublicApisOnce();
+
   const categories = CATEGORIES.filter(c => c !== 'All');
   const results: AnimeWallpaper[] = [];
 
@@ -197,59 +343,54 @@ export async function fetchLiveAnimeWallpapers(startIndex: number, count: number
     const currentId = startIndex + i;
     const category = categories[currentId % categories.length];
 
-    // Select category match for rich realistic wallpapers
-    let pool = LOFI_IMGS;
-    let customTitle = `${TITLES[currentId % TITLES.length]} #${currentId}`;
-    let tags = ['LocalHD', category.replace(/\s+/g, ''), 'Instant'];
+    let resolvedItem: AnimeWallpaper | null = null;
 
-    if (category === 'Scenic & Sky') {
-      pool = SCENIC_IMGS;
-      tags.push('WaifuPicsAPI');
-    } else if (category === 'Cyberpunk Neon') {
-      pool = CYBER_IMGS;
-      tags.push('NekosBestAPI');
-    } else if (category === 'Fantasy Magic') {
-      pool = FANTASY_IMGS;
-      tags.push('FantasyAPI');
-    } else if (category === 'Shonen Action') {
-      pool = SHONEN_IMGS;
-      tags.push('ActionAPI');
-    } else if (category === 'Minimalist Art') {
-      pool = MINIMALIST_IMGS;
-      tags.push('ZenArt');
-    } else if (category === 'Anime Movie Specials') {
-      pool = MOVIE_IMGS;
-      customTitle = MOVIE_TITLES[currentId % MOVIE_TITLES.length];
-      tags = ['MovieSeries', 'Cinematic', 'HD-AnimeMovie'];
+    // Pick from movies API
+    if (category === 'Anime Movie Specials' && cachedJikanMovies.length > 0) {
+      const movieIdx = currentId % cachedJikanMovies.length;
+      resolvedItem = { ...cachedJikanMovies[movieIdx] };
+    } 
+    // Pick from Top television rankings/seasons
+    else if ((category === 'Shonen Action' || category === 'Fantasy Magic' || category === 'Cyberpunk Neon') && cachedJikanAnime.length > 0) {
+      const animePool = cachedJikanAnime.filter(a => a.category === category);
+      if (animePool.length > 0) {
+        const animeIdx = currentId % animePool.length;
+        resolvedItem = { ...animePool[animeIdx] };
+      }
+    } 
+    // Pick from illustrative fanarts
+    else if ((category === 'Lo-Fi Vibe' || category === 'Minimalist Art' || category === 'Scenic & Sky') && cachedNekosBest.length > 0) {
+      const nekoPool = cachedNekosBest.filter(n => n.category === category);
+      if (nekoPool.length > 0) {
+        const nekoIdx = currentId % nekoPool.length;
+        resolvedItem = { ...nekoPool[nekoIdx] };
+      }
     }
 
-    const imageUrl = pool[currentId % pool.length];
-    const ratio: 'portrait' | 'landscape' = currentId % 2 === 0 ? 'portrait' : 'landscape';
-    const authorName = AUTHORS[currentId % AUTHORS.length];
-    const charName = CHARACTERS[currentId % CHARACTERS.length];
-    const downloads = Math.floor(1200 + (currentId * 41) % 6000);
-    const saves = Math.floor(300 + (currentId * 29) % 2500);
+    // Fallback block if any API is in cold-start / blocked/ offline
+    if (!resolvedItem) {
+      const categoryMatches = INITIAL_WALLPAPERS.filter(item => item.category === category);
+      if (categoryMatches.length > 0) {
+        resolvedItem = { ...categoryMatches[currentId % categoryMatches.length] };
+      } else {
+        resolvedItem = { ...INITIAL_WALLPAPERS[currentId % INITIAL_WALLPAPERS.length] };
+      }
+    }
 
-    results.push({
-      id: `anime-api-live-${currentId}`,
-      title: customTitle,
-      character: charName,
-      tags: tags,
-      imageUrl,
-      aspectRatio: ratio,
-      author: authorName,
-      downloads,
-      saves,
-      category
-    });
+    // Decorate ID to guarantee absolute unique React state mappings
+    const finalItem: AnimeWallpaper = {
+      ...resolvedItem,
+      id: `${resolvedItem.id}-live-${currentId}`
+    };
+
+    results.push(finalItem);
   }
 
-  return Promise.resolve(results);
+  return results;
 }
 
-// Deprecated Unused helper in favor of live streaming API content securely and cleanly
+// Retaining declaration for backwards compatibility
 export function generateMoreWallpapers(startIndex: number, count: number): AnimeWallpaper[] {
-  // Retaining declaration for type schema validation compatibility
   const categories = CATEGORIES.filter(c => c !== 'All');
   const results: AnimeWallpaper[] = [];
   for (let i = 0; i < count; i++) {
