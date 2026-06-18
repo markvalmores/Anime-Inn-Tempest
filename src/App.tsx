@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Sparkles,
+  LogIn,
   ShoppingBag,
   Info,
   Layers,
@@ -38,7 +39,10 @@ import ShopModal from './components/ShopModal';
 import DoubleRedeemerPortal from './components/DoubleRedeemerPortal';
 import WallpaperDetailModal from './components/WallpaperDetailModal';
 import LikedHistoryModal from './components/LikedHistoryModal';
-import ProfileShareHub from './components/ProfileShareHub';
+import ProfileShareHub, { PRESET_AVATARS, PRESET_COVERS } from './components/ProfileShareHub';
+import AppRegisterForm from './components/AppRegisterForm';
+import AppLoginForm from './components/AppLoginForm';
+import AdminConsole from './components/AdminConsole';
 import { playClickSound } from './lib/audio';
 
 // Logo asset path from image generator
@@ -128,6 +132,30 @@ export default function App() {
       return next;
     });
   };
+
+  // Current active view state: gallery, register, login
+  const [currentPage, setCurrentPage] = useState<'gallery' | 'register' | 'login'>('gallery');
+
+  // Lifted profile databases and configurations
+  const [profilesDb, setProfilesDb] = useState<Record<string, any>>(() => {
+    const saved = localStorage.getItem('tempest_users_db');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (_) { return {}; }
+    }
+    return {};
+  });
+
+  const [activeUserEmail, setActiveUserEmail] = useState<string>(() => {
+    return localStorage.getItem('tempest_active_user_email') || '';
+  });
+
+  const [activeCodes, setActiveCodes] = useState<string[]>(() => {
+    const saved = localStorage.getItem('tempest_login_codes');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (_) { return []; }
+    }
+    return ['MARKDAVID777', 'LOYALTY2026', 'TEMPESTFREE', 'OFFLINE4EVER', 'ADMIN123', 'GIVE777'];
+  });
 
   const [wallpapers, setWallpapers] = useState<AnimeWallpaper[]>(INITIAL_WALLPAPERS);
   const [activeCategory, setActiveCategory] = useState<string>('All');
@@ -624,6 +652,9 @@ export default function App() {
     return isNotBroken && matchesCategory && matchesTag && matchesLikedFilter;
   });
 
+  const activeProfile = activeUserEmail ? profilesDb[activeUserEmail.toLowerCase().trim()] : null;
+  const isAdmin = activeUserEmail.toLowerCase().trim() === 'mdv4244@gmail.com';
+
   // Circular progress ring calculations for Daily Like Quota Tracker
   const progressRadius = 20;
   const progressCircumference = 2 * Math.PI * progressRadius;
@@ -902,7 +933,10 @@ export default function App() {
       {/* Dynamic Navigation matching Geometric Balance styling */}
       <nav className="h-16 border-b border-slate-800 bg-slate-900/50 px-6 flex items-center justify-between shrink-0 select-none">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center font-black text-xl italic text-slate-100 overflow-hidden shadow-md shadow-indigo-600/20">
+          <div 
+            onClick={() => { playClickSound(); setCurrentPage('gallery'); }} 
+            className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center font-black text-xl italic text-slate-100 overflow-hidden shadow-md shadow-indigo-600/20 cursor-pointer"
+          >
             <img
               src={mainLogo}
               alt="AT"
@@ -914,7 +948,10 @@ export default function App() {
             <span className="logo-text-fallback">AT</span>
           </div>
           <div>
-            <h1 className="text-sm md:text-base font-extrabold tracking-tight leading-none uppercase text-white">
+            <h1 
+              onClick={() => { playClickSound(); setCurrentPage('gallery'); }} 
+              className="text-sm md:text-base font-extrabold tracking-tight leading-none uppercase text-white cursor-pointer hover:text-indigo-300 transition-colors"
+            >
               Anime Inn Tempest
             </h1>
             <p className="text-[9px] md:text-[10px] text-slate-400 uppercase tracking-widest mt-0.5">
@@ -923,18 +960,85 @@ export default function App() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center bg-slate-800 px-3.5 py-1.5 rounded-full border border-slate-700/80">
-            <span className="text-[10px] md:text-xs font-bold text-slate-400 mr-2 uppercase font-mono tracking-wider">WALLET:</span>
-            <span className="text-indigo-400 font-extrabold text-xs md:text-sm font-mono tracking-tight">{points.toLocaleString()} pts</span>
+        {/* Dynamic Pages Tab Control - Direct Screen Switching */}
+        <div className="flex items-center gap-1 bg-slate-950/40 p-1 rounded-xl border border-slate-850/80">
+          <button
+            onClick={() => { playClickSound(); setCurrentPage('gallery'); }}
+            className={`px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-wider cursor-pointer transition-all ${
+              currentPage === 'gallery' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            🏡 Feed
+          </button>
+          <button
+            onClick={() => { playClickSound(); setCurrentPage('register'); }}
+            className={`px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-wider cursor-pointer transition-all ${
+              currentPage === 'register' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+            }`}
+            id="nav-register-btn"
+          >
+            📝 Register
+          </button>
+          <button
+            onClick={() => { playClickSound(); setCurrentPage('login'); }}
+            className={`px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-wider cursor-pointer transition-all ${
+              currentPage === 'login' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+            }`}
+            id="nav-login-btn"
+          >
+            🔑 Login
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 md:gap-4">
+          <div className="hidden xs:flex items-center bg-slate-800 px-3 py-1 rounded-full border border-slate-700/80 font-mono">
+            <span className="text-[9px] font-bold text-slate-400 mr-1.5 uppercase">WALLET:</span>
+            <span className="text-indigo-400 font-extrabold text-[11px] md:text-xs tracking-tight">{points.toLocaleString()} pts</span>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2 border-l border-slate-800 pl-4">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 border border-slate-700 flex items-center justify-center font-bold text-xs">
-              U5
+          {/* User Profile display based on real session credentials */}
+          {activeProfile ? (
+            <div className="flex items-center gap-2 border-l border-slate-800 pl-3 md:pl-4" id="logged-user-avatar-slot">
+              <img 
+                src={activeProfile.avatar} 
+                alt="" 
+                className="w-8 h-8 rounded-full border-2 border-indigo-500 object-cover shrink-0" 
+                referrerPolicy="no-referrer"
+              />
+              <div className="hidden sm:flex flex-col text-left max-w-[100px]">
+                <span className="text-xs font-black truncate text-slate-200 flex items-center gap-1">
+                  {activeProfile.nickname}
+                </span>
+                <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest leading-none">
+                  {isAdmin ? '👑 ADMIN' : '⭐ MEMBER'}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  playClickSound();
+                  setActiveUserEmail('');
+                  localStorage.removeItem('tempest_active_user_email');
+                  setRecentActions(prev => [
+                    { id: `logout-${Date.now()}`, text: 'Signed out active member account', time: 'Just now', plus: false },
+                    ...prev
+                  ]);
+                  setCurrentPage('gallery');
+                }}
+                className="px-2 py-1 bg-slate-800/80 hover:bg-rose-955 border border-slate-700 text-slate-400 hover:text-rose-450 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer select-none"
+                title="Log out of Secure Profile"
+                id="header-logout-btn"
+              >
+                Logout
+              </button>
             </div>
-            <span className="text-xs font-semibold text-slate-300">usagyuunvtuber5</span>
-          </div>
+          ) : (
+            <div className="flex items-center gap-2 border-l border-slate-800 pl-3 md:pl-4">
+              <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs text-slate-500">
+                G
+              </div>
+              <span className="hidden sm:inline text-xs font-semibold text-slate-450">Guest Mode</span>
+            </div>
+          )}
         </div>
       </nav>
 
@@ -996,6 +1100,16 @@ export default function App() {
             </div>
           </div>
 
+          {/* Admin Command Console System for mdv4244@gmail.com */}
+          {isAdmin && (
+            <AdminConsole
+              profilesDb={profilesDb}
+              setProfilesDb={setProfilesDb}
+              activeCodes={activeCodes}
+              setActiveCodes={setActiveCodes}
+            />
+          )}
+
           {/* Help Profile panel */}
           <div className="p-4 bg-slate-800/20 border border-slate-800/80 rounded-xl flex-1 lg:flex-initial min-w-[240px] lg:min-w-0 flex flex-col justify-center">
             <p className="text-[10px] text-slate-400 mb-1.5 font-semibold">Secure Code Delivery Profile:</p>
@@ -1011,13 +1125,15 @@ export default function App() {
           </div>
         </aside>
 
-        {/* Right Gallery Feed: Showcase Masonry Catalogue Grid */}
-        <section 
-          ref={galleryContainerRef}
-          onScroll={handleGalleryScroll}
-          className="flex-1 p-5 md:p-6 overflow-y-auto flex flex-col gap-6" 
-          id="right-gallery-container"
-        >
+        {/* Router screen condition switch */}
+        {currentPage === 'gallery' ? (
+          /* Right Gallery Feed: Showcase Masonry Catalogue Grid */
+          <section 
+            ref={galleryContainerRef}
+            onScroll={handleGalleryScroll}
+            className="flex-1 p-5 md:p-6 overflow-y-auto flex flex-col gap-6" 
+            id="right-gallery-container"
+          >
           
           {/* Daily Tokyo Time Login Bonus Banner */}
           <div className="relative overflow-hidden bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 rounded-2xl border border-indigo-500/20 p-5 md:p-6 shadow-xl flex flex-col gap-5 select-none shrink-0" id="daily-login-banner">
@@ -1191,6 +1307,12 @@ export default function App() {
             currentPoints={points}
             onUpdatePoints={updatePoints}
             onAddRecentAction={(text, plus) => setRecentActions(prev => [{ id: `action-${Date.now()}`, text, time: 'Just now', plus }, ...prev.slice(0, 5)])}
+            profilesDb={profilesDb}
+            setProfilesDb={setProfilesDb}
+            activeUserEmail={activeUserEmail}
+            setActiveUserEmail={setActiveUserEmail}
+            activeCodes={activeCodes}
+            setActiveCodes={setActiveCodes}
           />
 
           {/* Categorized Filter controls & Stats Header */}
@@ -1388,6 +1510,64 @@ export default function App() {
             )}
           </div>
         </section>
+        ) : currentPage === 'register' ? (
+          <section className="flex-1 p-6 md:p-8 overflow-y-auto flex flex-col items-center justify-center bg-slate-950/40 relative select-none" id="dedicated-register-section">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.06),transparent_70%)] pointer-events-none" />
+            <div className="w-full max-w-xl bg-slate-900 border border-slate-850/80 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden backdrop-blur-md">
+              <div className="flex items-center gap-3 border-b border-slate-800 pb-4 mb-6">
+                <div className="w-10 h-10 bg-indigo-600/20 border border-indigo-400/30 rounded-xl flex items-center justify-center shrink-0">
+                  <Sparkles className="w-5 h-5 text-indigo-400 animate-pulse" />
+                </div>
+                <div>
+                  <h2 className="text-sm md:text-base font-black tracking-tight text-white uppercase">DEDICATED REGISTER PORTAL</h2>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-widest font-mono mt-0.5">Secure registration database - All your points will be permanent locked!</p>
+                </div>
+              </div>
+              <AppRegisterForm 
+                currentPoints={points}
+                profilesDb={profilesDb}
+                onRegisterSuccess={(profile) => {
+                  setProfilesDb(prev => {
+                    const updated = { ...prev, [profile.email.toLowerCase().trim()]: profile };
+                    localStorage.setItem('tempest_users_db', JSON.stringify(updated));
+                    return updated;
+                  });
+                  setActiveUserEmail(profile.email);
+                  localStorage.setItem('tempest_active_user_email', profile.email);
+                  setRecentActions(prev => [{ id: `reg-${Date.now()}`, text: `Registered Profile ${profile.nickname}`, time: 'Just now', plus: true }, ...prev.slice(0, 5)]);
+                  setCurrentPage('gallery');
+                }}
+                activeCodes={activeCodes}
+              />
+            </div>
+          </section>
+        ) : (
+          <section className="flex-1 p-6 md:p-8 overflow-y-auto flex flex-col items-center justify-center bg-slate-950/40 relative select-none" id="dedicated-login-section">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.06),transparent_70%)] pointer-events-none" />
+            <div className="w-full max-w-lg bg-slate-900 border border-slate-850/80 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden backdrop-blur-md">
+              <div className="flex items-center gap-3 border-b border-slate-800 pb-4 mb-6">
+                <div className="w-10 h-10 bg-indigo-600/20 border border-indigo-400/30 rounded-xl flex items-center justify-center shrink-0">
+                  <LogIn className="w-5 h-5 text-indigo-400 animate-pulse" />
+                </div>
+                <div>
+                  <h2 className="text-sm md:text-base font-black tracking-tight text-white uppercase">MEMBER SECURE LOGIN</h2>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-widest font-mono mt-0.5">Access your registered points from any node or mobile browser</p>
+                </div>
+              </div>
+              <AppLoginForm 
+                profilesDb={profilesDb}
+                onLoginSuccess={(profile) => {
+                  setActiveUserEmail(profile.email);
+                  localStorage.setItem('tempest_active_user_email', profile.email);
+                  updatePoints(profile.points);
+                  setRecentActions(prev => [{ id: `login-${Date.now()}`, text: `Welcome back, ${profile.nickname}!`, time: 'Just now', plus: true }, ...prev.slice(0, 5)]);
+                  setCurrentPage('gallery');
+                }}
+                activeCodes={activeCodes}
+              />
+            </div>
+          </section>
+        )}
 
       </main>
 

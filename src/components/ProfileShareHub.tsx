@@ -29,7 +29,7 @@ import { playClickSound } from '../lib/audio';
 import { INITIAL_WALLPAPERS } from '../data/wallpapers';
 
 // Preset Covers
-const PRESET_COVERS = [
+export const PRESET_COVERS = [
   "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80", // Cyberpunk Grid
   "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=800&q=80", // Retro Synthwave
   "https://images.unsplash.com/photo-1518156677180-95a2893f3e9f?auto=format&fit=crop&w=800&q=80", // Sky Scenery
@@ -37,7 +37,7 @@ const PRESET_COVERS = [
 ];
 
 // Preset Avatars
-const PRESET_AVATARS = [
+export const PRESET_AVATARS = [
   "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=150&q=80", // Anime Girl
   "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=150&q=80", // Chibi Boy
   "https://images.unsplash.com/photo-1580477667995-2b94f01c9516?auto=format&fit=crop&w=150&q=80", // Cool Mask
@@ -57,39 +57,27 @@ interface ProfileShareHubProps {
   currentPoints: number;
   onUpdatePoints: (newPoints: number) => void;
   onAddRecentAction: (text: string, plus: boolean) => void;
+  profilesDb: Record<string, UserProfile>;
+  setProfilesDb: React.Dispatch<React.SetStateAction<Record<string, UserProfile>>>;
+  activeUserEmail: string;
+  setActiveUserEmail: (email: string) => void;
+  activeCodes: string[];
+  setActiveCodes: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 export default function ProfileShareHub({
   currentPoints,
   onUpdatePoints,
-  onAddRecentAction
+  onAddRecentAction,
+  profilesDb,
+  setProfilesDb,
+  activeUserEmail,
+  setActiveUserEmail,
+  activeCodes,
+  setActiveCodes
 }: ProfileShareHubProps) {
-  // Global profile register database
-  const [profilesDb, setProfilesDb] = useState<Record<string, UserProfile>>(() => {
-    const saved = localStorage.getItem('tempest_users_db');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (_) { return {}; }
-    }
-    return {};
-  });
-
-  // Logged-in email
-  const [activeUserEmail, setActiveUserEmail] = useState<string>(() => {
-    return localStorage.getItem('tempest_active_user_email') || '';
-  });
-
   // Current logged in profile state
   const activeProfile = activeUserEmail ? profilesDb[activeUserEmail.toLowerCase().trim()] : null;
-
-  // Login Codes Database (saved so "depends on me/Mark" holds custom-made values)
-  const [activeCodes, setActiveCodes] = useState<string[]>(() => {
-    const saved = localStorage.getItem('tempest_login_codes');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (_) { return []; }
-    }
-    // Prepopulated active codes
-    return ['MARKDAVID777', 'LOYALTY2026', 'TEMPESTFREE', 'OFFLINE4EVER', 'ADMIN123', 'GIVE777'];
-  });
 
   // UI inputs
   const [registerEmail, setRegisterEmail] = useState('');
