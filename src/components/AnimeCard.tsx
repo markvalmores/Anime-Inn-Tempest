@@ -22,6 +22,8 @@ export default function AnimeCard({
   isDailyLimitReached = false,
 }: AnimeCardProps) {
   const [clickSparks, setClickSparks] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [heartPops, setHeartPops] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [showCenterHeart, setShowCenterHeart] = useState(false);
   const [sparkCount, setSparkCount] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -34,7 +36,14 @@ export default function AnimeCard({
       return;
     }
 
+    const wasPinned = isPinned;
     onPin(wallpaper.id, e);
+
+    // Trigger center large heart explosion if turning ON the like
+    if (!wasPinned) {
+      setShowCenterHeart(true);
+      setTimeout(() => setShowCenterHeart(false), 800);
+    }
 
     // Dynamic floating spark click position (offset relative to visual viewport button click)
     const rect = e.currentTarget.getBoundingClientRect();
@@ -42,11 +51,13 @@ export default function AnimeCard({
     const y = e.clientY - rect.top;
 
     setClickSparks((prev) => [...prev, { id: sparkCount, x, y }]);
+    setHeartPops((prev) => [...prev, { id: sparkCount, x, y }]);
     setSparkCount((prev) => prev + 1);
 
     // Auto-remove spark after half a second
     setTimeout(() => {
       setClickSparks((prev) => prev.filter((s) => s.id !== sparkCount));
+      setHeartPops((prev) => prev.filter((h) => h.id !== sparkCount));
     }, 800);
   };
 
@@ -108,12 +119,12 @@ export default function AnimeCard({
         <AnimatePresence>
           {clickSparks.map((spark) => (
             <motion.span
-              key={spark.id}
+              key={`spark-${spark.id}`}
               initial={{ opacity: 1, y: -5, scale: 0.8 }}
               animate={{ opacity: 0, y: -65, scale: 1.2, x: (Math.random() - 0.5) * 40 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.7, ease: 'easeOut' }}
-              className="absolute z-30 pointer-events-none font-sans font-black text-xs md:text-sm text-emerald-400 tracking-wider flex items-center gap-0.5 pointer-events-none"
+              className="absolute z-30 pointer-events-none font-sans font-black text-xs md:text-sm text-emerald-400 tracking-wider flex items-center gap-0.5"
               style={{
                 top: `${spark.y}px`,
                 left: `${spark.x}px`,
@@ -124,6 +135,44 @@ export default function AnimeCard({
               +3 Pts
             </motion.span>
           ))}
+
+          {heartPops.map((pop) => (
+            <motion.span
+              key={`heart-${pop.id}`}
+              initial={{ opacity: 1, y: 0, scale: 0.5, rotate: 0 }}
+              animate={{ opacity: 0, y: -80, scale: 1.5, rotate: (Math.random() - 0.5) * 60, x: (Math.random() - 0.5) * 60 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              className="absolute z-35 pointer-events-none flex items-center justify-center text-rose-500 text-lg drop-shadow-[0_0_10px_rgba(244,63,94,0.8)]"
+              style={{
+                top: `${pop.y - 15}px`,
+                left: `${pop.x - 10}px`,
+              }}
+            >
+              ❤️
+            </motion.span>
+          ))}
+
+          {showCenterHeart && (
+            <motion.div
+              initial={{ scale: 0.2, opacity: 0 }}
+              animate={{ scale: [1, 1.4, 1.2], opacity: [1, 1, 0] }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.75, ease: "easeOut" }}
+              className="absolute inset-0 z-40 pointer-events-none flex items-center justify-center bg-slate-950/20 backdrop-blur-[1px]"
+            >
+              <div className="bg-slate-950/80 border border-rose-500/35 p-6 rounded-full shadow-[0_0_50px_rgba(244,63,94,0.4)] flex flex-col items-center justify-center">
+                <motion.span
+                  animate={{ scale: [1, 1.3, 1] }}
+                  transition={{ duration: 0.4, repeat: 1 }}
+                  className="text-4xl md:text-5xl text-rose-500 drop-shadow-[0_0_20px_rgba(244,63,94,0.7)]"
+                >
+                  ❤️
+                </motion.span>
+                <span className="text-[10px] text-rose-400 font-mono font-black uppercase tracking-widest mt-1.5 animate-pulse">PINNED! +3 PTS</span>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
 
         {/* Quick Add Pin Button "+in" */}

@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { playClickSound } from '../lib/audio';
 import { INITIAL_WALLPAPERS } from '../data/wallpapers';
+import VerifiedBadge from './VerifiedBadge';
 
 // Preset Covers
 export const PRESET_COVERS = [
@@ -51,6 +52,8 @@ export interface UserProfile {
   avatar: string;
   coverPhoto: string;
   points: number;
+  isVerified?: boolean;
+  verifiedUntil?: number;
 }
 
 interface ProfileShareHubProps {
@@ -1088,8 +1091,11 @@ export default function ProfileShareHub({
                 </div>
 
                 <div className="mb-1 space-y-0.5">
-                  <div className="flex items-center gap-1.5 flex-col sm:flex-row">
-                    <span className="text-base font-black text-white leading-none tracking-tight">{activeProfile.nickname}</span>
+                  <div className="flex items-center gap-1.5 flex-col sm:flex-row font-sans">
+                    <span className="text-base font-black text-white leading-none tracking-tight flex items-center gap-1.5">
+                      {activeProfile.nickname}
+                      <VerifiedBadge email={activeProfile.email} isVerified={activeProfile.isVerified} />
+                    </span>
                     <span className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider font-mono flex items-center gap-1">
                       <CheckCircle className="w-2.5 h-2.5" />
                       <span>SECURED</span>

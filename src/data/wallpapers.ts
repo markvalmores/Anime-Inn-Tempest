@@ -7,7 +7,8 @@ export const CATEGORIES = [
   'Fantasy Magic',
   'Shonen Action',
   'Minimalist Art',
-  'Lo-Fi Vibe'
+  'Lo-Fi Vibe',
+  'Anime Movie Specials'
 ];
 
 // Pre-curated, highly beautiful static high-quality anime illustration URLs as immediate fallbacks
@@ -168,6 +169,25 @@ const LOFI_IMGS = [
   'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&auto=format&fit=crop&q=80',
 ];
 
+const MOVIE_IMGS = [
+  'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?w=1200&auto=format&fit=crop&q=80', // Kimi No Na Wa Twilight sky
+  'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=1200&auto=format&fit=crop&q=80', // Cinematic Evening
+  'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200&auto=format&fit=crop&q=80', // Wizard of Howl Castle
+  'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1200&auto=format&fit=crop&q=80', // Starry Shinkai Sky
+  'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1200&auto=format&fit=crop&q=80', // Ghibli Green Valley
+  'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=1200&auto=format&fit=crop&q=80', // Forest Pathway Spirit
+];
+
+const MOVIE_TITLES = [
+  'Kimi No Na Wa (Your Name) - Starfall Twilight',
+  'Tenki No Ko (Weathering With You) - Sky Sunshine',
+  'Suzume No Tojimari - The Abandoned Keyhole',
+  'Sen to Chihiro (Spirited Away) - Bathhouse Lanterns',
+  'Howl\'s Moving Castle - Starfield Meadows',
+  'Kotonoha no Niwa (Garden of Words) - Rainy Pavilion',
+  'Koe no Katachi (A Silent Voice) - Bridge Encounter'
+];
+
 // Highly stable, error-free client-side fetches from free public API endpoints
 export async function fetchLiveAnimeWallpapers(startIndex: number, count: number): Promise<AnimeWallpaper[]> {
   const categories = CATEGORIES.filter(c => c !== 'All');
@@ -179,11 +199,29 @@ export async function fetchLiveAnimeWallpapers(startIndex: number, count: number
 
     // Select category match for rich realistic wallpapers
     let pool = LOFI_IMGS;
-    if (category === 'Scenic & Sky') pool = SCENIC_IMGS;
-    else if (category === 'Cyberpunk Neon') pool = CYBER_IMGS;
-    else if (category === 'Fantasy Magic') pool = FANTASY_IMGS;
-    else if (category === 'Shonen Action') pool = SHONEN_IMGS;
-    else if (category === 'Minimalist Art') pool = MINIMALIST_IMGS;
+    let customTitle = `${TITLES[currentId % TITLES.length]} #${currentId}`;
+    let tags = ['LocalHD', category.replace(/\s+/g, ''), 'Instant'];
+
+    if (category === 'Scenic & Sky') {
+      pool = SCENIC_IMGS;
+      tags.push('WaifuPicsAPI');
+    } else if (category === 'Cyberpunk Neon') {
+      pool = CYBER_IMGS;
+      tags.push('NekosBestAPI');
+    } else if (category === 'Fantasy Magic') {
+      pool = FANTASY_IMGS;
+      tags.push('FantasyAPI');
+    } else if (category === 'Shonen Action') {
+      pool = SHONEN_IMGS;
+      tags.push('ActionAPI');
+    } else if (category === 'Minimalist Art') {
+      pool = MINIMALIST_IMGS;
+      tags.push('ZenArt');
+    } else if (category === 'Anime Movie Specials') {
+      pool = MOVIE_IMGS;
+      customTitle = MOVIE_TITLES[currentId % MOVIE_TITLES.length];
+      tags = ['MovieSeries', 'Cinematic', 'HD-AnimeMovie'];
+    }
 
     const imageUrl = pool[currentId % pool.length];
     const ratio: 'portrait' | 'landscape' = currentId % 2 === 0 ? 'portrait' : 'landscape';
@@ -194,9 +232,9 @@ export async function fetchLiveAnimeWallpapers(startIndex: number, count: number
 
     results.push({
       id: `anime-api-live-${currentId}`,
-      title: `${TITLES[currentId % TITLES.length]} #${currentId}`,
+      title: customTitle,
       character: charName,
-      tags: ['LocalHD', category.replace(/\s+/g, ''), 'Instant'],
+      tags: tags,
       imageUrl,
       aspectRatio: ratio,
       author: authorName,

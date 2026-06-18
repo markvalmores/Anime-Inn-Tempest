@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShoppingBag, Star, X, Check, Copy, ExternalLink, Calendar, Smartphone, Coins } from 'lucide-react';
+import { ShoppingBag, Star, X, Check, Copy, ExternalLink, Calendar, Smartphone, Coins, ShieldCheck, User } from 'lucide-react';
 import { RedemptionCode } from '../types';
 import { playClickSound } from '../lib/audio';
 
@@ -10,6 +10,9 @@ interface ShopModalProps {
   points: number;
   redeemedCodes: RedemptionCode[];
   onRedeem: (code: RedemptionCode) => void;
+  activeUserEmail?: string;
+  activeProfile?: any;
+  onPurchaseVerifiedBadge?: () => void;
 }
 
 export default function ShopModal({
@@ -18,17 +21,32 @@ export default function ShopModal({
   points,
   redeemedCodes,
   onRedeem,
+  activeUserEmail,
+  activeProfile,
+  onPurchaseVerifiedBadge
 }: ShopModalProps) {
   const [successCode, setSuccessCode] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState<'paypay' | 'gcash'>('paypay');
+  const [selectedTab, setSelectedTab] = useState<'paypay' | 'gcash' | 'verified'>('paypay');
 
-  const pointsUsed = 1000;
+  const pointsUsed = selectedTab === 'verified' ? 50000 : 1000;
   const canRedeem = points >= pointsUsed;
 
   const handleRedeem = () => {
     if (!canRedeem) return;
     playClickSound();
+
+    if (selectedTab === 'verified') {
+      if (!activeUserEmail) {
+        alert("Please register or log in first to purchase the Verified Badge!");
+        return;
+      }
+      if (onPurchaseVerifiedBadge) {
+        onPurchaseVerifiedBadge();
+        setSuccessCode('VERIFIED-BADGE-SUCCESS');
+      }
+      return;
+    }
 
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     const segment1 = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
@@ -145,7 +163,7 @@ export default function ShopModal({
                 }`}
               >
                 <div className={`w-2 h-2 rounded-full ${selectedTab === 'paypay' ? 'bg-white' : 'bg-rose-500'}`} />
-                PayPay Points JCode
+                PayPay JCode
               </button>
               <button
                 onClick={() => { playClickSound(); setSelectedTab('gcash'); }}
@@ -158,32 +176,47 @@ export default function ShopModal({
                 <div className={`w-2 h-2 rounded-full ${selectedTab === 'gcash' ? 'bg-white' : 'bg-emerald-500'}`} />
                 GCash Cash Voucher
               </button>
+              <button
+                onClick={() => { playClickSound(); setSelectedTab('verified'); }}
+                className={`flex-1 py-2.5 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-2 select-none cursor-pointer ${
+                  selectedTab === 'verified'
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <div className={`w-2 h-2 rounded-full ${selectedTab === 'verified' ? 'bg-white' : 'bg-indigo-500'}`} />
+                Verified Badge 🌟
+              </button>
             </div>
 
             {/* Main Dynamic Offer Card */}
             <div className={`grid grid-cols-1 md:grid-cols-12 gap-5 p-5 rounded-xl bg-slate-950/40 border transition-colors ${
-              selectedTab === 'paypay' ? 'border-rose-500/10' : 'border-emerald-500/10'
+              selectedTab === 'paypay' ? 'border-rose-500/10' : selectedTab === 'gcash' ? 'border-emerald-500/10' : 'border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.1)]'
             }`}>
               {/* Offer visual */}
               <div className={`col-span-1 md:col-span-4 flex flex-col items-center justify-center p-5 bg-slate-950 rounded-xl border ${
                 selectedTab === 'paypay' 
                   ? 'border-rose-500/20 bg-gradient-to-b from-transparent to-rose-950/5' 
-                  : 'border-emerald-500/20 bg-gradient-to-b from-transparent to-emerald-950/5'
+                  : selectedTab === 'gcash'
+                  ? 'border-emerald-500/20 bg-gradient-to-b from-transparent to-emerald-950/5'
+                  : 'border-indigo-500/30 bg-gradient-to-b from-transparent to-indigo-950/10'
               }`}>
                 <div className={`p-4 rounded-full border mb-3 ${
-                  selectedTab === 'paypay' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                  selectedTab === 'paypay' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' : selectedTab === 'gcash' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'
                 }`}>
-                  <Smartphone className="w-8 h-8" />
+                  {selectedTab === 'verified' ? <ShieldCheck className="w-8 h-8 text-indigo-400 stroke-[2.5] animate-pulse" /> : <Smartphone className="w-8 h-8" />}
                 </div>
                 <span className={`text-[10px] uppercase font-mono font-black tracking-widest ${
-                  selectedTab === 'paypay' ? 'text-rose-400' : 'text-emerald-400'
+                  selectedTab === 'paypay' ? 'text-rose-400' : selectedTab === 'gcash' ? 'text-emerald-400' : 'text-indigo-400'
                 }`}>
-                  {selectedTab === 'paypay' ? 'Japan Point Code' : 'Load Voucher'}
+                  {selectedTab === 'paypay' ? 'Japan Point Code' : selectedTab === 'gcash' ? 'Load Voucher' : 'Profile Status'}
                 </span>
-                <span className="text-2xl font-black text-white mt-1">
-                  {selectedTab === 'paypay' ? '200 PP Points' : '₱100.00'}
+                <span className="text-xl font-black text-white mt-1 text-center leading-tight">
+                  {selectedTab === 'paypay' ? '200 PP Points' : selectedTab === 'gcash' ? '₱100.00' : 'Verified Badge'}
                 </span>
-                <span className="text-[10px] text-slate-500 mt-1">Instant JCode Generate</span>
+                <span className="text-[10px] text-slate-500 mt-1 text-center">
+                  {selectedTab === 'verified' ? 'Active 1 Month Status' : 'Instant JCode Generate'}
+                </span>
               </div>
 
               {/* Offer Description and Action */}
@@ -192,39 +225,56 @@ export default function ShopModal({
                   <h3 className="text-base font-extrabold text-slate-250">
                     {selectedTab === 'paypay' 
                       ? 'Japan PayPay 200 Points JCode' 
-                      : '₱100 GCash Load Voucher Key'
+                      : selectedTab === 'gcash'
+                      ? '₱100 GCash Load Voucher Key'
+                      : '★ 1-Month Premium Verified Badge'
                     }
                   </h3>
                   <p className="text-xs text-slate-400 mt-1 leading-relaxed">
                     {selectedTab === 'paypay'
                       ? 'Purchase a 200 PayPay Points JCode fully redeemable in the mobile PayPay account. Redeems instantly for 1,000 points. You can also paste this into our 2x Double Redeemer App to instantly turn it into 400 PayPay Points!'
-                      : 'Purchase a stable ₱100 worth of GCash codes instantly. Redemptions are stable, one-time generation keys. You can also cash this out through our 2x Double Redeemer App into ₱200 GCash cash reward!'
+                      : selectedTab === 'gcash'
+                      ? 'Purchase a stable ₱100 worth of GCash codes instantly. Redemptions are stable, one-time generation keys. You can also cash this out through our 2x Double Redeemer App into ₱200 GCash cash reward!'
+                      : 'Purchase the premium BLUE Verified badge for 50,000 points. Flaunt your validated traveler prestige next to your name inside the social lobby, chat feed, comments, and profile view. Golden badges are exclusive to Admin & President mdv4244@gmail.com!'
                     }
                   </p>
                   
+                  {selectedTab === 'verified' && (activeProfile?.isVerified || activeProfile?.email?.toLowerCase().trim() === 'mdv4244@gmail.com') && (
+                    <div className="p-2 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold text-[10px] flex items-center gap-1.5">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      <span>You already have a verified badge active!</span>
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-2 mt-3 p-2 rounded-lg bg-slate-900/60 border border-slate-800/60 text-[10px] text-slate-400 font-mono">
-                    <span className={`h-1.5 w-1.5 rounded-full ${selectedTab === 'paypay' ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`} />
-                    <span>Cost: 1,000 Pts (Exchanges points instantly)</span>
+                    <span className={`h-1.5 w-1.5 rounded-full ${selectedTab === 'paypay' ? 'bg-rose-500 animate-pulse' : selectedTab === 'gcash' ? 'bg-emerald-500 animate-pulse' : 'bg-indigo-500 animate-pulse'}`} />
+                    <span>Cost: {selectedTab === 'verified' ? '50,000 Pts' : '1,000 Pts'} (Exchanges points instantly)</span>
                   </div>
                 </div>
 
                 <div className="pt-2 border-t border-slate-900 flex flex-col gap-2">
                   <button
-                    disabled={!canRedeem}
+                    disabled={!canRedeem || (selectedTab === 'verified' && !activeUserEmail) || (selectedTab === 'verified' && (activeProfile?.isVerified || activeProfile?.email?.toLowerCase().trim() === 'mdv4244@gmail.com'))}
                     onClick={handleRedeem}
                     id="purchase-btn"
                     className={`w-full py-3.5 px-4 rounded-xl font-bold text-xs tracking-wider transition-all shadow-md flex items-center justify-center gap-2 select-none ${
-                      canRedeem
+                      canRedeem && !(selectedTab === 'verified' && (activeProfile?.isVerified || activeProfile?.email?.toLowerCase().trim() === 'mdv4244@gmail.com'))
                         ? selectedTab === 'paypay'
                           ? 'bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-400 hover:to-pink-400 text-white cursor-pointer active:scale-98 shadow-rose-500/10'
-                          : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 cursor-pointer active:scale-98 shadow-emerald-500/10'
+                          : selectedTab === 'gcash'
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 cursor-pointer active:scale-98 shadow-emerald-500/10'
+                          : 'bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white cursor-pointer active:scale-98 shadow-indigo-500/20'
                         : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                     }`}
                   >
-                    {canRedeem ? (
+                    {!activeUserEmail && selectedTab === 'verified' ? (
+                      'Please register/login to buy Verified Badge'
+                    ) : selectedTab === 'verified' && (activeProfile?.isVerified || activeProfile?.email?.toLowerCase().trim() === 'mdv4244@gmail.com') ? (
+                      'Already Verified'
+                    ) : canRedeem ? (
                       <>
                         <Check className="w-4.5 h-4.5 stroke-[2.5]" />
-                        Generate {selectedTab === 'paypay' ? 'PayPay' : 'GCash'} Code for 1,000 Pts!
+                        {selectedTab === 'verified' ? 'Purchase 1-Month Verified Badge for 50,000 Pts' : `Generate ${selectedTab === 'paypay' ? 'PayPay' : 'GCash'} Code for 1,000 Pts!`}
                       </>
                     ) : (
                       `Collect ${pointsUsed - points} more points to redeem`
@@ -236,53 +286,76 @@ export default function ShopModal({
 
             {/* Instruction Panel if Code Redeemed */}
             {successCode && (
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`p-4 rounded-xl border space-y-3 shadow-xl ${
-                  successCode.startsWith('PP') 
-                    ? 'border-rose-500/30 bg-rose-950/15' 
-                    : 'border-emerald-500/30 bg-emerald-950/15'
-                }`}
-              >
-                <div className="flex items-center gap-2 font-bold text-xs">
-                  <span className={`p-1 rounded-full text-slate-950 ${successCode.startsWith('PP') ? 'bg-rose-500' : 'bg-emerald-500'}`}>
-                    <Check className="w-3 h-3 stroke-[3]" />
-                  </span>
-                  <span className={successCode.startsWith('PP') ? 'text-rose-400' : 'text-emerald-400'}>
-                    {successCode.startsWith('PP') ? 'PayPay Points Code' : 'GCash Code'} Generated Successfully!
-                  </span>
-                </div>
-                
-                <div className="bg-slate-950 p-3 rounded-lg flex items-center justify-between border border-slate-800 font-mono">
-                  <span className="text-sm md:text-base font-black tracking-widest text-slate-100">{successCode}</span>
-                  <button
-                    onClick={() => copyToClipboard(successCode, 'success')}
-                    className="p-1.5 px-3 hover:bg-slate-900 border border-slate-800 rounded-md text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-1 text-[11px] font-sans"
-                  >
-                    {copiedId === 'success' ? (
-                      <>
-                        <Check className="w-3 h-3 text-emerald-400" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3 h-3" />
-                        Copy
-                      </>
-                    )}
-                  </button>
-                </div>
+              successCode === 'VERIFIED-BADGE-SUCCESS' ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-5 rounded-xl border border-indigo-500/35 bg-indigo-950/20 space-y-3 shadow-xl"
+                >
+                  <div className="flex items-center gap-2 font-bold text-xs">
+                    <span className="p-1 rounded-full text-white bg-indigo-600 animate-bounce">
+                      <ShieldCheck className="w-4 h-4 stroke-[2.5]" />
+                    </span>
+                    <span className="text-indigo-400 uppercase tracking-wider font-mono">
+                      ★ Blue Verified Badge Purchased Successfully!
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                    Congratulations! You have exchanged <strong>50,000 points</strong> for a premium 1-Month Blue Verified Badge. The verified check icon has been successfully applied to your avatar and traveler identity everywhere in the saloon lobby, chatting channels, the member wall, and card visualizers.
+                  </p>
+                  <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-850 text-[11px] text-slate-400 font-mono">
+                    👤 Registered Traveler: <strong className="text-white">{activeProfile?.nickname}</strong> ({activeProfile?.email})
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`p-4 rounded-xl border space-y-3 shadow-xl ${
+                    successCode.startsWith('PP') 
+                      ? 'border-rose-500/30 bg-rose-950/15' 
+                      : 'border-emerald-500/30 bg-emerald-950/15'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 font-bold text-xs">
+                    <span className={`p-1 rounded-full text-slate-950 ${successCode.startsWith('PP') ? 'bg-rose-500' : 'bg-emerald-500'}`}>
+                      <Check className="w-3 h-3 stroke-[3]" />
+                    </span>
+                    <span className={successCode.startsWith('PP') ? 'text-rose-400' : 'text-emerald-400'}>
+                      {successCode.startsWith('PP') ? 'PayPay Points Code' : 'GCash Code'} Generated Successfully!
+                    </span>
+                  </div>
+                  
+                  <div className="bg-slate-950 p-3 rounded-lg flex items-center justify-between border border-slate-800 font-mono">
+                    <span className="text-sm md:text-base font-black tracking-widest text-slate-100">{successCode}</span>
+                    <button
+                      onClick={() => copyToClipboard(successCode, 'success')}
+                      className="p-1.5 px-3 hover:bg-slate-900 border border-slate-800 rounded-md text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-1 text-[11px] font-sans"
+                    >
+                      {copiedId === 'success' ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-400" />
+                          Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          Copy
+                        </>
+                      )}
+                    </button>
+                  </div>
 
-                <div className="space-y-2 text-slate-300 text-[11px] leading-relaxed border-t border-slate-850 pt-2.5">
-                  <p className="font-bold text-slate-200 flex items-center gap-1.5">
-                    <span className="text-rose-400 animate-pulse">⚡</span> DOUBLE VALUE INSTRUCTIONS (GCASHOUT / PAYOUT TO 09763329358):
-                  </p>
-                  <p>
-                    Do not claim manually for face-value. Paste this generated JCode in our partner <strong className="text-indigo-300">2x Double Redeemer Portal</strong> (click the <strong>"Redeem 2x App"</strong> button in sidebar) under the verified account number <strong className="text-white bg-slate-950 px-1 py-0.5 rounded border border-slate-800">09763329358</strong> to double its value instantly to <strong>400 PayPay Points</strong> or <strong>₱200.00 GCash</strong>!
-                  </p>
-                </div>
-              </motion.div>
+                  <div className="space-y-2 text-slate-300 text-[11px] leading-relaxed border-t border-slate-850 pt-2.5">
+                    <p className="font-bold text-slate-200 flex items-center gap-1.5">
+                      <span className="text-rose-400 animate-pulse">⚡</span> DOUBLE VALUE INSTRUCTIONS (GCASHOUT / PAYOUT TO 09763329358):
+                    </p>
+                    <p>
+                      Do not claim manually for face-value. Paste this generated JCode in our partner <strong className="text-indigo-300">2x Double Redeemer Portal</strong> (click the <strong>"Redeem 2x App"</strong> button in sidebar) under the verified account number <strong className="text-white bg-slate-950 px-1 py-0.5 rounded border border-slate-850">09763329358</strong> to double its value instantly to <strong>400 PayPay Points</strong> or <strong>₱200.00 GCash</strong>!
+                    </p>
+                  </div>
+                </motion.div>
+              )
             )}
 
             {/* Redemption History List */}

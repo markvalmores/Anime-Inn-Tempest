@@ -43,6 +43,8 @@ import ProfileShareHub, { PRESET_AVATARS, PRESET_COVERS } from './components/Pro
 import AppRegisterForm from './components/AppRegisterForm';
 import AppLoginForm from './components/AppLoginForm';
 import AdminConsole from './components/AdminConsole';
+import VerifiedBadge from './components/VerifiedBadge';
+import SocialHome from './components/SocialHome';
 import { playClickSound } from './lib/audio';
 
 // Logo asset path from image generator
@@ -133,8 +135,8 @@ export default function App() {
     });
   };
 
-  // Current active view state: gallery, register, login
-  const [currentPage, setCurrentPage] = useState<'gallery' | 'register' | 'login'>('gallery');
+  // Current active view state: gallery, register, login, social
+  const [currentPage, setCurrentPage] = useState<'gallery' | 'register' | 'login' | 'social'>('gallery');
 
   // Lifted profile databases and configurations
   const [profilesDb, setProfilesDb] = useState<Record<string, any>>(() => {
@@ -531,6 +533,30 @@ export default function App() {
     const rewardName = newCode.rewardType === 'paypay' ? '200 PP Points JCode' : 'GCash ₱100 Code';
     setRecentActions(prev => [
       { id: `act-${Date.now()}`, text: `Generated ${rewardName}! Use 2x App to double!`, time: 'Just now', plus: true },
+      ...prev.slice(0, 5)
+    ]);
+  };
+
+  const handlePurchaseVerifiedBadge = () => {
+    if (points < 50000) return;
+    updatePoints(Math.max(0, points - 50000));
+
+    if (activeUserEmail) {
+      const cleanEmail = activeUserEmail.toLowerCase().trim();
+      const updated = { ...profilesDb };
+      if (updated[cleanEmail]) {
+        updated[cleanEmail] = {
+          ...updated[cleanEmail],
+          isVerified: true,
+          verifiedUntil: Date.now() + 30 * 24 * 60 * 60 * 1000 // 1 month
+        };
+        setProfilesDb(updated);
+        localStorage.setItem('tempest_users_db', JSON.stringify(updated));
+      }
+    }
+
+    setRecentActions(prev => [
+      { id: `verified-${Date.now()}`, text: `Purchased 1-Month Verified Badge (-50,000 Pts)`, time: 'Just now', plus: false },
       ...prev.slice(0, 5)
     ]);
   };
@@ -971,6 +997,15 @@ export default function App() {
             🏡 Feed
           </button>
           <button
+            onClick={() => { playClickSound(); setCurrentPage('social'); }}
+            className={`px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-wider cursor-pointer transition-all ${
+              currentPage === 'social' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+            }`}
+            id="nav-social-btn"
+          >
+            💬 Social Home
+          </button>
+          <button
             onClick={() => { playClickSound(); setCurrentPage('register'); }}
             className={`px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-black uppercase tracking-wider cursor-pointer transition-all ${
               currentPage === 'register' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
@@ -1005,11 +1040,12 @@ export default function App() {
                 className="w-8 h-8 rounded-full border-2 border-indigo-500 object-cover shrink-0" 
                 referrerPolicy="no-referrer"
               />
-              <div className="hidden sm:flex flex-col text-left max-w-[100px]">
-                <span className="text-xs font-black truncate text-slate-200 flex items-center gap-1">
+              <div className="hidden sm:flex flex-col text-left">
+                <span className="text-xs font-black truncate text-slate-200 flex items-center gap-1.5 leading-none">
                   {activeProfile.nickname}
+                  <VerifiedBadge email={activeProfile.email} isVerified={activeProfile.isVerified} />
                 </span>
-                <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest leading-none">
+                <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest leading-none mt-1">
                   {isAdmin ? '👑 ADMIN' : '⭐ MEMBER'}
                 </span>
               </div>
@@ -1510,6 +1546,13 @@ export default function App() {
             )}
           </div>
         </section>
+        ) : currentPage === 'social' ? (
+          <SocialHome
+            activeProfile={activeProfile}
+            profilesDb={profilesDb}
+            onUpdateProfiles={setProfilesDb}
+            playClickSound={playClickSound}
+          />
         ) : currentPage === 'register' ? (
           <section className="flex-1 p-6 md:p-8 overflow-y-auto flex flex-col items-center justify-center bg-slate-950/40 relative select-none" id="dedicated-register-section">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.06),transparent_70%)] pointer-events-none" />
@@ -1621,6 +1664,9 @@ export default function App() {
         points={points}
         redeemedCodes={redeemedCodes}
         onRedeem={handleRedeemCode}
+        activeUserEmail={activeUserEmail}
+        activeProfile={activeProfile}
+        onPurchaseVerifiedBadge={handlePurchaseVerifiedBadge}
       />
 
       <DoubleRedeemerPortal
