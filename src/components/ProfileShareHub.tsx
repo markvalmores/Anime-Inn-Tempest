@@ -102,6 +102,7 @@ export default function ProfileShareHub({
   // Sharing feedbacks
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedImage, setCopiedImage] = useState(false);
+  const [copyReferralSuccess, setCopyReferralSuccess] = useState(false);
   const [showSharePreview, setShowSharePreview] = useState(false);
   const [shareImgUrl, setShareImgUrl] = useState('');
 
@@ -1118,6 +1119,78 @@ export default function ProfileShareHub({
                   <LogOut className="w-3 h-3" />
                   <span>Log Out</span>
                 </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Real-time referral progress section */}
+          <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-4 space-y-4 shadow-xl text-left select-none relative overflow-hidden" id="referral-space-card">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-xl pointer-events-none" />
+            <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-indigo-500/10 text-indigo-400 rounded-lg border border-indigo-500/20">
+                  <UserPlus className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-white uppercase tracking-wider font-mono">My Referral Space</h3>
+                  <p className="text-[9px] text-slate-400 uppercase tracking-tight font-mono">Target: 21 recruits = 2,000pts reward</p>
+                </div>
+              </div>
+              <span className="text-[10px] font-mono font-bold text-slate-300 bg-slate-950 px-2 py-0.5 rounded border border-slate-800/50">
+                Recruits: <strong className="text-indigo-405">{(activeProfile as any).referralCount || 0}</strong> / 21
+              </span>
+            </div>
+
+            {/* Custom Referral Link / Code copy field */}
+            <div className="space-y-1.5">
+              <span className="text-[9px] text-slate-400 uppercase font-black tracking-wider font-mono block">Your Invite credentials to share:</span>
+              <div className="flex gap-1.5">
+                <div className="flex-1 bg-slate-950 border border-slate-850 rounded-xl px-3 py-2 flex items-center justify-between text-xs font-mono text-slate-300 overflow-hidden">
+                  <span className="truncate mr-2">Email: <strong className="text-white">{(activeProfile as any).email}</strong></span>
+                  <span className="text-[9px] opacity-40 select-none">|</span>
+                  <span className="shrink-0 text-[10px] ml-2">ID: <strong className="text-indigo-300">{(activeProfile as any).userId}</strong></span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    playClickSound();
+                    navigator.clipboard.writeText((activeProfile as any).email);
+                    setCopyReferralSuccess(true);
+                    setTimeout(() => setCopyReferralSuccess(false), 2000);
+                  }}
+                  className="px-3.5 bg-slate-800 hover:bg-slate-750 border border-slate-700/80 rounded-xl text-slate-300 hover:text-white font-extrabold text-[10px] font-mono uppercase tracking-wider inline-flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shrink-0"
+                >
+                  {copyReferralSuccess ? <span className="text-emerald-400 font-bold">Copied!</span> : <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy Email</span>
+                  </>}
+                </button>
+              </div>
+              <p className="text-[9px] text-slate-405 leading-normal font-sans">
+                Instruct other members to enter your email <span className="text-indigo-300 font-mono">{(activeProfile as any).email}</span> or ID <span className="text-indigo-300 font-mono">{(activeProfile as any).userId}</span> into the "Referral Account Email or ID" field when registering. Once your referral counter hits exactly <span className="text-white font-bold">21</span>, your vault will be instantly paid <span className="text-emerald-400 text-[10px] font-serif font-extrabold">2,000 PTS</span>!
+              </p>
+            </div>
+
+            {/* Referral Progress Bar */}
+            <div className="space-y-1 pt-1">
+              <div className="flex justify-between text-[9px] font-bold font-mono text-slate-400 uppercase">
+                <span>Progress to 2,000pts Milestone</span>
+                <span className="text-indigo-400">
+                  {Math.min(100, Math.round((((activeProfile as any).referralCount || 0) / 21) * 100))}%
+                </span>
+              </div>
+              <div className="w-full bg-slate-950 h-5 rounded-full overflow-hidden border border-slate-850 p-0.5 relative flex items-center shadow-inner">
+                <div 
+                  className="bg-gradient-to-r from-indigo-550 via-indigo-500 to-purple-550 h-full rounded-full transition-all duration-700 relative"
+                  style={{ width: `${Math.min(100, (((activeProfile as any).referralCount || 0) / 21) * 100)}%` }}
+                >
+                  <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.08)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.08)_50%,rgba(255,255,255,0.08)_75%,transparent_75%,transparent)] bg-[length:12px_12px] animate-shimmer" />
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="text-[8px] font-mono text-slate-300 font-extrabold tracking-widest uppercase">
+                    {((activeProfile as any).referralCount || 0) >= 21 ? '🎁 2,000pts BONUS EARNED!' : `RECRUIT ${21 - Math.min(21, (activeProfile as any).referralCount || 0)} MORE MEMBERS FOR 2,000pts BONUS`}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

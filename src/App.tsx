@@ -1529,11 +1529,42 @@ export default function App() {
                 onRegisterSuccess={(profile) => {
                   setProfilesDb(prev => {
                     const updated = { ...prev, [profile.email.toLowerCase().trim()]: profile };
+                    
+                    if (profile.referredBy) {
+                      const refEmail = profile.referredBy.toLowerCase().trim();
+                      if (updated[refEmail]) {
+                        const currentRef = (updated[refEmail].referralCount || 0) + 1;
+                        let bonusPoints = 0;
+                        let textAction = `Joined using ${updated[refEmail].nickname}'s referral link`;
+                        
+                        if (currentRef === 21) {
+                          bonusPoints = 2000;
+                          textAction = `🎉 ${updated[refEmail].nickname} reached 21 referrals & earned 2,000 pts bonus!`;
+                        }
+                        
+                        updated[refEmail] = {
+                          ...updated[refEmail],
+                          referralCount: currentRef,
+                          points: (updated[refEmail].points || 0) + bonusPoints
+                        };
+
+                        if (activeUserEmail && refEmail === activeUserEmail.toLowerCase().trim()) {
+                          setPoints(updated[refEmail].points);
+                        }
+
+                        setRecentActions(prevActions => [
+                          { id: `ref-mod-${Date.now()}`, text: textAction, time: 'Just now', plus: bonusPoints > 0 },
+                          ...prevActions.slice(0, 5)
+                        ]);
+                      }
+                    }
+
                     localStorage.setItem('tempest_users_db', JSON.stringify(updated));
                     return updated;
                   });
                   setActiveUserEmail(profile.email);
                   localStorage.setItem('tempest_active_user_email', profile.email);
+                  setPoints(profile.points);
                   setRecentActions(prev => [{ id: `reg-${Date.now()}`, text: `Registered Profile ${profile.nickname}`, time: 'Just now', plus: true }, ...prev.slice(0, 5)]);
                   setCurrentPage('gallery');
                 }}

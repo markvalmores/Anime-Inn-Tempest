@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, User, Lock, CheckCircle, RefreshCw } from 'lucide-react';
+import { Mail, User, Lock, CheckCircle, RefreshCw, Users } from 'lucide-react';
 import { playClickSound } from '../lib/audio';
 import { PRESET_AVATARS, PRESET_COVERS } from './ProfileShareHub';
 
@@ -19,6 +19,7 @@ export default function AppRegisterForm({
   const [email, setEmail] = useState('');
   const [nickname, setNickname] = useState('');
   const [code, setCode] = useState('');
+  const [referrerInput, setReferrerInput] = useState('');
   const [avatarIndex, setAvatarIndex] = useState(0);
   const [coverIndex, setCoverIndex] = useState(0);
 
@@ -54,6 +55,24 @@ export default function AppRegisterForm({
       }
     }
 
+    // Optional Referrer validation
+    const cleanReferrer = referrerInput.trim().toLowerCase();
+    let validatedReferrerEmail = '';
+    if (cleanReferrer) {
+      if (cleanReferrer === cleanEmail) {
+        setErrorText('You cannot list your own email/ID as a referrer!');
+        return;
+      }
+      const foundKey = Object.keys(profilesDb).find(
+        k => k.toLowerCase() === cleanReferrer || (profilesDb[k].userId && profilesDb[k].userId.toLowerCase() === cleanReferrer)
+      );
+      if (!foundKey) {
+        setErrorText('Referrer not found. Ensure you entered their exact registered Email or ID!');
+        return;
+      }
+      validatedReferrerEmail = foundKey;
+    }
+
     const randomId = Math.floor(10000 + Math.random() * 90000).toString();
     const newUserProfile = {
       email: cleanEmail,
@@ -61,7 +80,9 @@ export default function AppRegisterForm({
       nickname: nickname.trim() || (isTargetAdmin ? "Mark David (Admin)" : `User_${randomId}`),
       avatar: PRESET_AVATARS[avatarIndex],
       coverPhoto: PRESET_COVERS[coverIndex],
-      points: isTargetAdmin ? Math.max(currentPoints, 99999) : currentPoints // Admin gets instant legendary wealth!
+      points: isTargetAdmin ? Math.max(currentPoints, 99999) : currentPoints, // Admin gets instant legendary wealth!
+      referredBy: validatedReferrerEmail || undefined,
+      referralCount: 0
     };
 
     setSuccessText('Success! Register credentials processed, logging you in...');
@@ -118,6 +139,28 @@ export default function AppRegisterForm({
             />
           </div>
         </div>
+      </div>
+
+      {/* Referral Email / ID (Optional) */}
+      <div>
+        <label className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block mb-1.5 font-bold flex items-center gap-1.5">
+          <Users className="w-3.5 h-3.5 text-indigo-400" />
+          <span>Referral Account Email or ID (Optional)</span>
+        </label>
+        <div className="relative">
+          <User className="absolute top-2.5 left-3 w-4 h-4 text-slate-500" />
+          <input
+            type="text"
+            placeholder="e.g. referrer@gmail.com or ID '54321'"
+            value={referrerInput}
+            onChange={(e) => setReferrerInput(e.target.value)}
+            className="w-full bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-xl py-2 pl-9 pr-4 text-xs text-white placeholder-slate-600 outline-none transition-all focus:ring-1 focus:ring-indigo-500/30"
+            id="register-referrer-input"
+          />
+        </div>
+        <p className="text-[9px] text-slate-500 font-mono mt-1 uppercase">
+          Referrers earn <span className="text-emerald-400 font-extrabold">+2,000 pts</span> instantly upon reaching exactly <span className="text-indigo-400 font-extrabold">21 registered members</span>!
+        </p>
       </div>
 
       {/* Verification Code block (hidden for admin email address) */}
