@@ -1,3 +1,4 @@
+import confetti from 'canvas-confetti';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -28,6 +29,7 @@ import {
 import { playClickSound } from '../lib/audio';
 import { INITIAL_WALLPAPERS } from '../data/wallpapers';
 import VerifiedBadge from './VerifiedBadge';
+
 
 // Preset Covers
 export const PRESET_COVERS = [
@@ -1233,23 +1235,29 @@ export default function ProfileShareHub({
               <Award className="w-4 h-4 text-emerald-400" />
               Achievements
             </h3>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               {[
-                { id: 'likes', title: '100 Likes', icon: '❤️', unlocked: ((activeProfile as any).totalLikes || 0) >= 100 },
-                { id: 'streak', title: '7 Days', icon: '🔥', unlocked: ((activeProfile as any).streak || 0) >= 7 },
-                { id: 'referral', title: '5 Referrals', icon: '🔗', unlocked: ((activeProfile as any).referralCount || 0) >= 5 },
+                { id: 'streak-7', title: '7-Day Streak Warrior', icon: '🔥', unlocked: ((activeProfile as any).streak || 0) >= 7 },
+                { id: 'streak-30', title: 'Monthly Legend', icon: '👑', unlocked: ((activeProfile as any).streak || 0) >= 30 },
               ].map((badge) => (
-                <div
+                <motion.div
                   key={badge.id}
-                  className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 ${
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.05 }}
+                  className={`group relative p-3 rounded-xl border flex flex-col items-center gap-1.5 ${
                     badge.unlocked 
                       ? 'bg-emerald-900/10 border-emerald-500/20' 
                       : 'bg-slate-950/40 border-slate-850 opacity-60'
                   }`}
+                  onClick={() => badge.unlocked && confetti({ particleCount: 50, spread: 50 })}
                 >
+                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-700 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+                      {badge.title}
+                  </span>
                   <div className={`text-xl ${badge.unlocked ? 'grayscale-0' : 'grayscale'}`}>{badge.icon}</div>
-                  <div className="text-[9px] font-bold text-slate-300 uppercase leading-none">{badge.title}</div>
-                </div>
+                  <div className="text-[9px] font-bold text-slate-300 uppercase leading-none text-center">{badge.title}</div>
+                </motion.div>
               ))}
             </div>
           </div>

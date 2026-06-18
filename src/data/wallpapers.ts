@@ -317,11 +317,12 @@ export async function fetchLiveAnimeWallpapers(startIndex: number, count: number
   // Pull live records asynchronously
   await fetchAllPublicApisOnce();
 
-  // Combine all API data into a single pool for mixing
+  // Combine all API data into a single pool for mixing (weighted: more anime/artwork, less movies)
   const allLiveResults: AnimeWallpaper[] = [
     ...cachedJikanAnime,
+    ...cachedJikanAnime, 
     ...cachedNekosBest,
-    // Add movies only once to reduce their frequency
+    ...cachedNekosBest,
     ...cachedJikanMovies
   ];
 
