@@ -194,26 +194,52 @@ let cachedJikanMovies: AnimeWallpaper[] = [];
 let cachedNekosBest: AnimeWallpaper[] = [];
 let isFetchingApis = false;
 
-// Dynamic parallel API client to fetch from several public anime APIs at once
+// Hydrate dynamically on startup from localStorage cache to guarantee immediate display in PC/mobile browsers
+try {
+  if (typeof window !== 'undefined') {
+    const localSAnime = window.localStorage.getItem('api_jikan_anime');
+    if (localSAnime) cachedJikanAnime = JSON.parse(localSAnime);
+    
+    const localSMovies = window.localStorage.getItem('api_jikan_movies');
+    if (localSMovies) cachedJikanMovies = JSON.parse(localSMovies);
+    
+    const localSNekos = window.localStorage.getItem('api_nekos_best');
+    if (localSNekos) cachedNekosBest = JSON.parse(localSNekos);
+    
+    console.log("Hydrated live API cache from browser LocalStorage:", {
+      anime: cachedJikanAnime.length,
+      movies: cachedJikanMovies.length,
+      artwork: cachedNekosBest.length
+    });
+  }
+} catch (err) {
+  console.warn("LocalStorage API hydration skipped gracefully:", err);
+}
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Dynamic serial-parallel queue manager to fetch, stagger to avoid 429 Rate Limits, and securely cache MAL items
 async function fetchAllPublicApisOnce() {
-  if (cachedJikanAnime.length > 0 && cachedJikanMovies.length > 0 && cachedNekosBest.length > 0) return;
   if (isFetchingApis) return;
+  
+  // If we already have a hydrated cache, prioritize refreshing, but don't block
+  if (cachedJikanAnime.length > 0 && cachedJikanMovies.length > 0 && cachedNekosBest.length > 0) {
+    return;
+  }
+  
   isFetchingApis = true;
 
   try {
     // 1. Fetch Top Anime from public Jikan MAL API
-    const j1 = fetch('https://api.jikan.moe/v4/top/anime?limit=25')
-      .then(res => {
-        if (!res.ok) throw new Error(`MAL status: ${res.status}`);
-        return res.json();
-      })
-      .then(res => {
-        if (res && Array.isArray(res.data)) {
-          cachedJikanAnime = res.data.map((anime: any, index: number) => {
+    try {
+      const res = await fetch('https://api.jikan.moe/v4/top/anime?limit=25');
+      if (res.ok) {
+        const body = await res.json();
+        if (body && Array.isArray(body.data) && body.data.length > 0) {
+          cachedJikanAnime = body.data.map((anime: any, index: number) => {
             const genres = (anime.genres || []).map((g: any) => g.name);
             const title = anime.title_english || anime.title;
             
-            // Map genre tags to application design categories
             let category = 'Scenic & Sky';
             if (genres.some((g: string) => /Action|Shounen|Adventure|Martial/i.test(g))) {
               category = 'Shonen Action';
@@ -245,21 +271,28 @@ async function fetchAllPublicApisOnce() {
               episodes: anime.episodes || undefined
             } as AnimeWallpaper;
           });
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem('api_jikan_anime', JSON.stringify(cachedJikanAnime));
+          }
         }
-      })
-      .catch(e => {
-        console.warn("Soft failure pulling Jikan Top list; fallback ready:", e);
-      });
+      } else {
+        console.warn(`Jikan MAL service returned non-OK code ${res.status}. Stored fallback preserved.`);
+      }
+    } catch (apiErr) {
+      console.warn("Primary Anime MAL fetch paused or rate-limited: ", apiErr);
+    }
+
+    // Explicitly sleep/delay to prevent concurrently hitting MyAnimeList API, 
+    // abiding strictly by their 3-requests-per-second rate limit regulations.
+    await sleep(1000);
 
     // 2. Fetch Top Anime Movies from public Jikan MAL API
-    const j2 = fetch('https://api.jikan.moe/v4/anime?type=movie&order_by=popularity&sort=desc&limit=25')
-      .then(res => {
-        if (!res.ok) throw new Error(`MAL Movies status: ${res.status}`);
-        return res.json();
-      })
-      .then(res => {
-        if (res && Array.isArray(res.data)) {
-          cachedJikanMovies = res.data.map((anime: any, index: number) => {
+    try {
+      const res = await fetch('https://api.jikan.moe/v4/anime?type=movie&order_by=popularity&sort=desc&limit=25');
+      if (res.ok) {
+        const body = await res.json();
+        if (body && Array.isArray(body.data) && body.data.length > 0) {
+          cachedJikanMovies = body.data.map((anime: any, index: number) => {
             const genres = (anime.genres || []).map((g: any) => g.name);
             const title = anime.title_english || anime.title;
             return {
@@ -268,7 +301,7 @@ async function fetchAllPublicApisOnce() {
               character: anime.source || 'Original Script',
               tags: genres.length > 0 ? [...genres, 'Cinematic'] : ['AnimeMovie', 'Cinematic', 'MAL'],
               imageUrl: anime.images?.jpg?.large_image_url || anime.images?.webp?.large_image_url || 'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?w=1200',
-              aspectRatio: 'landscape', // Movies fit beautiful wide cover banners!
+              aspectRatio: 'landscape',
               author: (anime.studios || []).map((s: any) => s.name).join(', ') || 'Toho / CoMix Wave',
               downloads: anime.members ? Math.floor(anime.members / 100) : 3400,
               saves: anime.score ? Math.floor(anime.score * 160) : 810,
@@ -280,21 +313,27 @@ async function fetchAllPublicApisOnce() {
               episodes: 1
             } as AnimeWallpaper;
           });
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem('api_jikan_movies', JSON.stringify(cachedJikanMovies));
+          }
         }
-      })
-      .catch(e => {
-        console.warn("Soft failure pulling Jikan Movies list; fallback ready:", e);
-      });
+      } else {
+        console.warn(`Jikan MAL Movies service returned non-OK ${res.status}. Fallback active.`);
+      }
+    } catch (apiErr) {
+      console.warn("Primary Movie MAL fetch blocked: ", apiErr);
+    }
 
-    // 3. Fetch artwork from Nekos.best SFW API
-    const j3 = fetch('https://nekos.best/api/v2/neko?amount=30')
-      .then(res => {
-        if (!res.ok) throw new Error(`Nekos.best status: ${res.status}`);
-        return res.json();
-      })
-      .then(res => {
-        if (res && Array.isArray(res.results)) {
-          cachedNekosBest = res.results.map((neko: any, index: number) => {
+    // Stagger prior to accessing third public fanart API
+    await sleep(600);
+
+    // 3. Fetch SFW artwork from high-uptime Nekos.best API
+    try {
+      const res = await fetch('https://nekos.best/api/v2/neko?amount=30');
+      if (res.ok) {
+        const body = await res.json();
+        if (body && Array.isArray(body.results)) {
+          cachedNekosBest = body.results.map((neko: any, index: number) => {
             const staticNekoTitles = [
               'Luminous Neko Moonrise Ride',
               'Celestial Magical Circle Spell',
@@ -317,13 +356,15 @@ async function fetchAllPublicApisOnce() {
               category: categoriesOptions[index % categoriesOptions.length]
             } as AnimeWallpaper;
           });
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem('api_nekos_best', JSON.stringify(cachedNekosBest));
+          }
         }
-      })
-      .catch(e => {
-        console.warn("Soft failure pulling Nekos Best; fallback ready:", e);
-      });
+      }
+    } catch (apiErr) {
+      console.warn("Secondary Nekos Art fetch bypassed: ", apiErr);
+    }
 
-    await Promise.allSettled([j1, j2, j3]);
   } catch (error) {
     console.error("General public API fetch sequence failed:", error);
   } finally {

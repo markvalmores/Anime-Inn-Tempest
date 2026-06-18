@@ -1,6 +1,20 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { X, Heart, Download, Tag, User, Sparkles, Plus, Image, ExternalLink } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  X, 
+  Heart, 
+  Download, 
+  Tag, 
+  User, 
+  Sparkles, 
+  Plus, 
+  Image, 
+  ExternalLink,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Move
+} from 'lucide-react';
 import { AnimeWallpaper } from '../types';
 
 interface WallpaperDetailModalProps {
@@ -20,6 +34,7 @@ export default function WallpaperDetailModal({
 }: WallpaperDetailModalProps) {
   const [downloading, setDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const [zoomScale, setZoomScale] = useState(1);
 
   if (!wallpaper) return null;
 
@@ -48,6 +63,26 @@ export default function WallpaperDetailModal({
     }, 100);
   };
 
+  const handleZoomIn = () => {
+    setZoomScale((prev) => Math.min(prev + 0.5, 4));
+  };
+
+  const handleZoomOut = () => {
+    setZoomScale((prev) => Math.max(prev - 0.5, 1));
+  };
+
+  const handleResetZoom = () => {
+    setZoomScale(1);
+  };
+
+  const handleDoubleTap = () => {
+    if (zoomScale > 1) {
+      setZoomScale(1);
+    } else {
+      setZoomScale(2.5);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
       <motion.div
@@ -60,22 +95,96 @@ export default function WallpaperDetailModal({
         {/* Close Button on Mobile / Desktop absolute */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 text-white bg-slate-950/80 hover:bg-slate-950 border border-slate-800 rounded-full cursor-pointer transition-colors shadow-lg"
+          className="absolute top-4 right-4 z-20 p-2 text-white bg-slate-950/80 hover:bg-slate-950 border border-slate-800 rounded-full cursor-pointer transition-colors shadow-lg animate-pulse"
           title="Close details"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Wallpaper Image Container */}
-        <div className="md:w-1/2 bg-slate-950 flex items-center justify-center p-3 relative h-80 md:h-auto min-h-[320px] max-h-[45vh] md:max-h-[90vh]">
-          <img
-            src={wallpaper.imageUrl}
-            alt={wallpaper.title}
-            className="w-full h-full object-contain rounded-xl"
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute bottom-6 left-6 px-3 py-1 bg-black/70 rounded-full border border-slate-800 backdrop-blur-xs text-[10px] text-slate-400 font-mono capitalize">
-            {wallpaper.aspectRatio} Mode
+        {/* Zoomable Image Viewer Section (left pane) */}
+        <div className="md:w-1/2 bg-slate-950 flex flex-col items-center justify-center p-3 relative h-80 md:h-auto min-h-[340px] max-h-[50vh] md:max-h-[90vh] overflow-hidden select-none group">
+          {/* Main Zoom Area */}
+          <div className="w-full h-full flex items-center justify-center overflow-hidden rounded-xl relative bg-slate-950/40">
+            <motion.img
+              key={wallpaper.id}
+              src={wallpaper.imageUrl}
+              alt={wallpaper.title}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-contain rounded-xl cursor-zoom-in"
+              animate={{ scale: zoomScale }}
+              transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+              drag={zoomScale > 1}
+              dragConstraints={{ left: -180 * zoomScale, right: 180 * zoomScale, top: -185 * zoomScale, bottom: 185 * zoomScale }}
+              dragElastic={0.15}
+              onDoubleClick={handleDoubleTap}
+            />
+
+            {/* Gesture Helper & HUD overlaid details */}
+            <div className="absolute top-4 left-4 flex flex-col gap-1.5 pointer-events-none">
+              <span className="px-2.5 py-1 bg-black/75 rounded-md border border-slate-850/80 text-[9px] text-slate-400 font-mono tracking-wider font-extrabold uppercase">
+                {wallpaper.aspectRatio} Viewport
+              </span>
+              {zoomScale > 1 && (
+                <motion.span 
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="px-2 py-0.5 bg-indigo-500/90 text-slate-950 rounded text-[9px] font-mono tracking-wider font-extrabold flex items-center gap-1 shadow-md shadow-indigo-500/20"
+                >
+                  <Move className="w-2.5 h-2.5" />
+                  DRAGGING ACTIVE
+                </motion.span>
+              )}
+            </div>
+
+            {/* Float-up glassmorphism Zoom Control Box */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 px-3 py-1.5 bg-slate-950/85 md:bg-slate-900/90 border border-slate-800/80 rounded-full backdrop-blur-md shadow-xl select-none">
+              {/* Zoom Out Button */}
+              <button
+                onClick={handleZoomOut}
+                disabled={zoomScale <= 1}
+                className="p-1.5 text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-all rounded-full hover:bg-slate-800 cursor-pointer"
+                title="Zoom Out"
+              >
+                <ZoomOut className="w-4 h-4" />
+              </button>
+
+              {/* Current Zoom status indicator */}
+              <span 
+                className="text-[10px] font-mono font-black text-slate-300 min-w-[50px] text-center cursor-pointer hover:text-indigo-400 transition-colors"
+                onClick={handleDoubleTap}
+                title="Double tap/click to toggle 250% zoom"
+              >
+                {Math.round(zoomScale * 100)}%
+              </span>
+
+              {/* Zoom In Button */}
+              <button
+                onClick={handleZoomIn}
+                disabled={zoomScale >= 4}
+                className="p-1.5 text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-all rounded-full hover:bg-slate-800 cursor-pointer"
+                title="Zoom In"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </button>
+
+              {/* Divider spacing */}
+              <div className="w-[1px] h-3 bg-slate-850" />
+
+              {/* Reset view tool */}
+              <button
+                onClick={handleResetZoom}
+                disabled={zoomScale === 1}
+                className="p-1.5 text-slate-400 hover:text-indigo-400 disabled:opacity-20 transition-all rounded-full hover:bg-slate-800 cursor-pointer"
+                title="Reset Fit"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            
+            {/* Double click instruction label */}
+            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-slate-950/70 py-1 px-3 rounded text-[9px] text-slate-400 font-medium tracking-wide">
+              {zoomScale > 1 ? "Drag to pan / Double-click to reset" : "Double-click to fast-zoom (2.5x)"}
+            </div>
           </div>
         </div>
 
@@ -102,7 +211,7 @@ export default function WallpaperDetailModal({
               </div>
               <div className="text-right">
                 <div className="text-[10px] text-slate-500 font-mono">Dls / Saves</div>
-                <div className="text-xs font-bold text-slate-300 font-mono">
+                <div className="text-xs font-bold text-slate-330 font-mono">
                   {wallpaper.downloads + (downloading ? 1 : 0)} / {wallpaper.saves + (isPinned ? 1 : 0)}
                 </div>
               </div>
