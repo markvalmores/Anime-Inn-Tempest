@@ -38,6 +38,7 @@ import ShopModal from './components/ShopModal';
 import DoubleRedeemerPortal from './components/DoubleRedeemerPortal';
 import WallpaperDetailModal from './components/WallpaperDetailModal';
 import LikedHistoryModal from './components/LikedHistoryModal';
+import ProfileShareHub from './components/ProfileShareHub';
 import { playClickSound } from './lib/audio';
 
 // Logo asset path from image generator
@@ -1184,7 +1185,15 @@ export default function App() {
               </AnimatePresence>
             </div>
           </div>
-                  {/* Categorized Filter controls & Stats Header */}
+
+          {/* Secures points registration & beautiful share cards widget */}
+          <ProfileShareHub
+            currentPoints={points}
+            onUpdatePoints={updatePoints}
+            onAddRecentAction={(text, plus) => setRecentActions(prev => [{ id: `action-${Date.now()}`, text, time: 'Just now', plus }, ...prev.slice(0, 5)])}
+          />
+
+          {/* Categorized Filter controls & Stats Header */}
           <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 border-b border-slate-800 pb-5" id="categorized-filter-controls">
             
             {/* Quick Primary Filters */}
