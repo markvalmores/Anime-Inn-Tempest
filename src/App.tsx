@@ -42,6 +42,7 @@ import DoubleRedeemerPortal from './components/DoubleRedeemerPortal';
 import WallpaperDetailModal from './components/WallpaperDetailModal';
 import LikedHistoryModal from './components/LikedHistoryModal';
 import ProfileShareHub, { PRESET_AVATARS, PRESET_COVERS } from './components/ProfileShareHub';
+import DailyMilestoneTracker from './components/DailyMilestoneTracker';
 import AppRegisterForm from './components/AppRegisterForm';
 import AppLoginForm from './components/AppLoginForm';
 import AdminConsole from './components/AdminConsole';
@@ -1435,6 +1436,8 @@ export default function App() {
                 </div>
               </div>
             </div>
+
+            <DailyMilestoneTracker likesCount={dailyLikesCount} />
 
             {/* Quick collapsable link to reveal all 30 days tiles journey */}
             <div className="border-t border-indigo-500/10 pt-4 mt-1 relative z-10">

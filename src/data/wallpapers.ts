@@ -1,4 +1,5 @@
 import { AnimeWallpaper } from '../types';
+import { cacheManager } from '../lib/cache';
 
 export const CATEGORIES = [
   'All',
@@ -13,31 +14,40 @@ export const CATEGORIES = [
 
 // Pre-curated, highly beautiful static high-quality anime illustration URLs as immediate fallbacks
 export const INITIAL_WALLPAPERS: AnimeWallpaper[] = [
-  // 1. Scenic & Sky
   { id: 'anime-scenic-1', title: 'Your Name: Cosmic Starfall Canopy', character: 'Mitsuha & Taki', tags: ['Scenic', 'Sky', 'YourName', 'Stars', 'Romantic'], imageUrl: 'https://i.waifu.pics/b6m8GgX.png', aspectRatio: 'portrait', author: 'Makoto Shinkai Fanart', downloads: 3420, saves: 1882, category: 'Scenic & Sky', synopsis: 'A stunning depiction of the starry twilight comet splitting over the lake of Itomori, bringing two fated souls together.', rating: '8.9 / 10 MAL', type: 'Movie', episodes: 1 },
   { id: 'anime-scenic-2', title: 'Garden of Cherry Blossom Meadow', character: 'Aria Skyward', tags: ['Scenic', 'CherryBlossom', 'Garden', 'Spring'], imageUrl: 'https://i.waifu.pics/7-m8GgX.png', aspectRatio: 'landscape', author: 'Sora_Artist', downloads: 4120, saves: 1540, category: 'Scenic & Sky', synopsis: 'Soft spring petals falling over a traditional wooden bridge, creating a magnificent floral pathway in full bloom.', rating: '8.4 / 10', type: 'TV' },
   { id: 'anime-scenic-3', title: 'Moonlight Reflection Sanctuary', character: 'Luna Goddess', tags: ['Scenic', 'Sky', 'Moon', 'Night', 'Glow'], imageUrl: 'https://i.waifu.pics/9~m8GgX.png', aspectRatio: 'portrait', author: 'HokusaiGlow', downloads: 2980, saves: 1104, category: 'Scenic & Sky', synopsis: 'An ethereal crescent moon casting golden reflections across a calm sea, watched by a solitary white fox spirit.', rating: '8.1 / 10' },
   { id: 'anime-scenic-4', title: 'Summer Clouds and School Roof', character: 'Student Group', tags: ['Scenic', 'Summer', 'School', 'Clouds'], imageUrl: 'https://i.waifu.pics/L-m8GgX.png', aspectRatio: 'landscape', author: 'Anime_Scenic_Artist', downloads: 2100, saves: 900, category: 'Scenic & Sky', synopsis: 'A classic anime trope of students relaxing on a school roof top, overlooking a vast blue sky with fluffy cumulus clouds.', rating: '8.5 / 10' },
+  { id: 'anime-scenic-5', title: 'Hidden Waterfall Shrine', character: 'Shrine Maiden', tags: ['Scenic', 'Nature', 'Waterfall', 'Forest'], imageUrl: 'https://i.waifu.pics/K-m8GgX.png', aspectRatio: 'landscape', author: 'Nature_Artist', downloads: 1800, saves: 750, category: 'Scenic & Sky', synopsis: 'A secluded waterfall shrine nestled deep in a misty green forest.', rating: '8.3 / 10' },
   // 2. Cyberpunk Neon
   { id: 'anime-cyber-1', title: 'Cyberpunk Edgerunners: Neon Night Shift', character: 'Lucy Kushinada', tags: ['Cyberpunk', 'Neon', 'SciFi', 'Tech', 'Street'], imageUrl: 'https://i.waifu.pics/W-Wk-mF.png', aspectRatio: 'landscape', author: 'Studio Trigger Fanart', downloads: 5120, saves: 3420, category: 'Cyberpunk Neon', synopsis: 'The brilliant gridways of Night City burning under dark clouds, capturing a netrunner perched on a skyscraper.', rating: '8.6 / 10 MAL', type: 'TV', episodes: 10 },
   { id: 'anime-cyber-2', title: 'Holographic Pilot Cockpit 01', character: 'Nova 01', tags: ['Cyberpunk', 'Hologram', 'Tech', 'Cockpit'], imageUrl: 'https://i.waifu.pics/P~m8GgX.png', aspectRatio: 'portrait', author: 'CyberKuro', downloads: 1890, saves: 720, category: 'Cyberpunk Neon', synopsis: 'Interactive HUD panels glowing turquoise inside a futuristic mecha flight deck, guiding pilot Nova through orbital re-entry.', rating: '7.9 / 10' },
   { id: 'anime-cyber-3', title: 'Neo Tokyo Red Sector Dawn', character: 'Motoko Kusanagi', tags: ['Cyberpunk', 'Neon', 'Retro', 'Android', 'Night'], imageUrl: 'https://i.waifu.pics/y-m8GgX.png', aspectRatio: 'landscape', author: 'Manga_Glow', downloads: 3820, saves: 1940, category: 'Cyberpunk Neon', synopsis: 'A towering digital advertisement matrix projecting crimson laser grids over dark metallic streets of Retro Neo Tokyo.', rating: '8.5 / 10 MAL' },
+  { id: 'anime-cyber-4', title: 'Cyber Street Rain', character: 'Street Racer', tags: ['Cyberpunk', 'Rain', 'Street', 'Neon'], imageUrl: 'https://i.waifu.pics/A-m8GgX.png', aspectRatio: 'landscape', author: 'City_Artist', downloads: 2500, saves: 1100, category: 'Cyberpunk Neon', synopsis: 'A rain-slicked street in a cyberpunk metropolis filled with neon lights.', rating: '8.1 / 10' },
   // 3. Fantasy Magic
   { id: 'anime-magic-1', title: 'Frieren: Beyond Journeys Spellbound Circle', character: 'Frieren the Mage', tags: ['Fantasy', 'Magic', 'Spell', 'Witch', 'Ancient'], imageUrl: 'https://i.waifu.pics/M-m8GgX.png', aspectRatio: 'portrait', author: 'LunaSpell', downloads: 2710, saves: 1045, category: 'Fantasy Magic', synopsis: 'A nostalgic elven mage conjuring a circular golden magic matrix to conjure fields of blue flowers from legends.', rating: '9.3 / 10 MAL', type: 'TV', episodes: 28 },
   { id: 'anime-magic-2', title: 'Runes of the Sacred Circle', character: 'Spellcaster Mei', tags: ['Fantasy', 'Magic', 'Sorcerer', 'Stars', 'Summon'], imageUrl: 'https://i.waifu.pics/F-m8GgX.png', aspectRatio: 'landscape', author: 'Pixiv_Enthusiast', downloads: 1980, saves: 651, category: 'Fantasy Magic', synopsis: 'An apprentice witch calling upon ancient runic circles floating above her glowing ritual book inside a starfield sanctuary.', rating: '8.0 / 10' },
   { id: 'anime-magic-3', title: 'Enchanted Forest Moon Oracle', character: 'Elven Sage', tags: ['Fantasy', 'Magic', 'Forest', 'Elf', 'Spirits'], imageUrl: 'https://i.waifu.pics/H-m8GgX.png', aspectRatio: 'portrait', author: 'OtakuVibe_Studio', downloads: 2432, saves: 981, category: 'Fantasy Magic', synopsis: 'A silver-haired elven shrine maiden kneeling on starry river waters as fireflies dance under a glowing ancient tree.', rating: '8.2 / 10' },
+  { id: 'anime-magic-4', title: 'Starry Sky Mage', character: 'Young Witch', tags: ['Fantasy', 'Magic', 'Stars', 'Witch'], imageUrl: 'https://i.waifu.pics/O~m8GgX.png', aspectRatio: 'portrait', author: 'Magic_Artist', downloads: 2000, saves: 800, category: 'Fantasy Magic', synopsis: 'A young witch studying magic under a starry night sky.', rating: '8.0 / 10' },
   // 4. Shonen Action
   { id: 'anime-shonen-1', title: 'Demon Slayer: Crimson Flame Hashira', character: 'Kyojuro Rengoku', tags: ['Shonen', 'Action', 'Samurai', 'Flame', 'Katana'], imageUrl: 'https://i.waifu.pics/X~m8GgX.png', aspectRatio: 'portrait', author: 'Ufotable Fanart', downloads: 6500, saves: 3900, category: 'Shonen Action', synopsis: 'An epic battle strike where a blazing fire dragon coils from a samurai katana blade, illuminating a dark forest night.', rating: '8.7 / 10 MAL', type: 'Movie', episodes: 1 },
   { id: 'anime-shonen-2', title: 'The Silent Ronin Wanderer', character: 'Kageyama Jin', tags: ['Shonen', 'Action', 'Samurai', 'Sword', 'Tradition'], imageUrl: 'https://i.waifu.pics/Sg5m~gX.png', aspectRatio: 'portrait', author: 'Yuki_Art', downloads: 2852, saves: 1210, category: 'Shonen Action', synopsis: 'A lonely swordsman walking past red spider lilies under a crescent blood moon, gripping his ancient iron sheathed blade.', rating: '8.3 / 10' },
   { id: 'anime-shonen-3', title: 'Apex Spirit Form Unleashed', character: 'Naruto Spirit Vibe', tags: ['Shonen', 'Action', 'Chakra', 'Ninjutsu', 'Glow'], imageUrl: 'https://i.waifu.pics/Y~m8GgX.png', aspectRatio: 'landscape', author: 'Ryota_S', downloads: 5410, saves: 2310, category: 'Shonen Action', synopsis: 'An intense ninja battle scene featuring orange standard seals and golden energy swirling around a determined fighter.', rating: '8.2 / 10 MAL' },
+  { id: 'anime-shonen-4', title: 'Combat Duel', character: 'Warrior', tags: ['Shonen', 'Action', 'Battle'], imageUrl: 'https://i.waifu.pics/Z~m8GgX.png', aspectRatio: 'landscape', author: 'Action_Artist', downloads: 3000, saves: 1200, category: 'Shonen Action', synopsis: 'An intense combat duel between two powerful warriors.', rating: '8.4 / 10' },
   // 5. Minimalist Art
   { id: 'anime-minimal-1', title: 'Cosmic Digital Void Horizon', character: 'Aesthetic Vector', tags: ['Minimalist', 'Synthwave', 'Grid', 'Void', 'Sky'], imageUrl: 'https://i.waifu.pics/G-m8GgX.png', aspectRatio: 'landscape', author: 'Vect_Art', downloads: 1980, saves: 651, category: 'Minimalist Art', synopsis: 'Clean pastel aesthetic with a tiny silhouette of an anime traveler sitting on top of a neon wireframe sunset grid.', rating: '7.8 / 10' },
   { id: 'anime-minimal-2', title: 'Clean Silhouette Evening Chill', character: 'Retro Cat Silhouette', tags: ['Minimalist', 'Lofi', 'Silhouette', 'Cozy', 'Cat'], imageUrl: 'https://i.waifu.pics/Z~m8GgX.png', aspectRatio: 'portrait', author: 'Kenshin Desu', downloads: 2341, saves: 890, category: 'Minimalist Art', synopsis: 'A beautiful warm-toned graphic silhouette of a child sitting on a windowsill next to a sleeping calico cat under stars.', rating: '8.0 / 10' },
+  { id: 'anime-minimal-3', title: 'Vector Sunset', character: 'Traveler', tags: ['Minimalist', 'Sunset', 'Vector'], imageUrl: 'https://i.waifu.pics/R-Wk_mF.png', aspectRatio: 'landscape', author: 'Art_Artist', downloads: 1500, saves: 600, category: 'Minimalist Art', synopsis: 'A minimalist vector illustration of a sunset.', rating: '7.6 / 10' },
   // 6. Lo-Fi Vibe
   { id: 'anime-lofi-1', title: 'Retro Arcade Chill Neko Desk', character: 'Meiko Neko', tags: ['Lo-Fi', 'Cozy', 'Arcade', 'Neon', 'Neko', 'Study'], imageUrl: 'https://i.waifu.pics/uK1p_gD.png', aspectRatio: 'landscape', author: 'Taito_Me', downloads: 8102, saves: 4104, category: 'Lo-Fi Vibe', synopsis: 'A cozy bedroom filled with gaming consoles, neon signs, and cat ears headphones as rain taps gently on the window.', rating: '8.2 / 10', type: 'TV', episodes: 12 },
   { id: 'anime-lofi-2', title: 'Raindrops on Cafe Cozy Window', character: 'Chibi Coffee Vibe', tags: ['Lo-Fi', 'Rain', 'Cafe', 'Warm', 'Dreamy'], imageUrl: 'https://i.waifu.pics/e-m8GgX.png', aspectRatio: 'landscape', author: 'TokyoCreative', downloads: 3045, saves: 1493, category: 'Lo-Fi Vibe', synopsis: 'Relaxing hot tea cup emitting spiral steam on wooden coffee counter overlooking a wet Tokyo neon street in autumn.', rating: '8.0 / 10' },
+  { id: 'anime-lofi-3', title: 'Cozy Cafe', character: 'Student', tags: ['Lo-Fi', 'Cafe', 'Cozy'], imageUrl: 'https://i.waifu.pics/j~m8GgX.png', aspectRatio: 'landscape', author: 'Study_Artist', downloads: 2500, saves: 1000, category: 'Lo-Fi Vibe', synopsis: 'A cozy corner on a desk in a cafe.', rating: '8.1 / 10' },
   // 7. Anime Movie Specials
-  { id: 'anime-movie-spec-1', title: 'Your Name (Kimi no Na wa) Twilight Comet', character: 'Mitsuha & Taki', tags: ['Movie', 'Cinematic', 'YourName', 'Stars', 'Shinkai'], imageUrl: 'https://i.waifu.pics/b6m8GgX.png', aspectRatio: 'landscape', author: 'Comix Wave Films Fanart', downloads: 8900, saves: 5310, category: 'Anime Movie Specials', synopsis: 'The ultimate climax scene where the sky burns with comet particles, as two lovers on separate mountaintops try to remember what is lost.', rating: '8.9 / 10 MAL', type: 'Movie', episodes: 1, malUrl: 'https://myanimelist.net/anime/32281/Kimi_no_Na_wa' }
+  { id: 'anime-movie-spec-1', title: 'Your Name (Kimi no Na wa) Twilight Comet', character: 'Mitsuha & Taki', tags: ['Movie', 'Cinematic', 'YourName', 'Stars', 'Shinkai'], imageUrl: 'https://i.waifu.pics/b6m8GgX.png', aspectRatio: 'landscape', author: 'Comix Wave Films Fanart', downloads: 8900, saves: 5310, category: 'Anime Movie Specials', synopsis: 'The ultimate climax scene where the sky burns with comet particles, as two lovers on separate mountaintops try to remember what is lost.', rating: '8.9 / 10 MAL', type: 'Movie', episodes: 1, malUrl: 'https://myanimelist.net/anime/32281/Kimi_no_Na_wa' },
+  { id: 'anime-movie-spec-2', title: 'Suzume No Tojimari - Starfall Horizon', character: 'Suzume Vibe', tags: ['Movie', 'Cinematic', 'Suzume', 'Portal', 'Clouds'], imageUrl: 'https://i.waifu.pics/7-m8GgX.png', aspectRatio: 'landscape', author: 'CoMix Wave Studios', downloads: 4530, saves: 1980, category: 'Anime Movie Specials', synopsis: 'Standout visual capturing a magical gate standing in the center of grass meadows under a spectacular starry evening void.', rating: '8.3 / 10 MAL', type: 'Movie', episodes: 1, malUrl: 'https://myanimelist.net/anime/50717/Suzume_no_Tojimari' },
+  { id: 'anime-movie-spec-3', title: 'Howl\'s Moving Castle - Magic Meadows', character: 'Howl & Sophie', tags: ['Movie', 'Cinematic', 'Ghibli', 'Fantasy', 'Castle'], imageUrl: 'https://i.waifu.pics/e-m8GgX.png', aspectRatio: 'landscape', author: 'Studio Ghibli Fanart', downloads: 7420, saves: 3951, category: 'Anime Movie Specials', synopsis: 'Howl and Sophie walking through a vibrant green field of mountain flowers under crystal clear blue skies filled with floating magic portals.', rating: '8.8 / 10 MAL', type: 'Movie', episodes: 1, malUrl: 'https://myanimelist.net/anime/431/Howl_no_Ugoku_Shiro' },
+  { id: 'anime-movie-spec-4', title: 'Spirited Away - Bathhouse Night', character: 'Chihiro & Haku', tags: ['Movie', 'Cinematic', 'Ghibli', 'Magic'], imageUrl: 'https://i.waifu.pics/b6m8GgX.png', aspectRatio: 'landscape', author: 'Studio Ghibli Fanart', downloads: 9200, saves: 5100, category: 'Anime Movie Specials', synopsis: 'Chihiro standing before the mysterious spirited away bathhouse at night.', rating: '9.0 / 10 MAL', type: 'Movie', episodes: 1, malUrl: 'https://myanimelist.net/anime/199/Sen_to_Chihiro_no_Kamikakushi' },
+  { id: 'anime-tv-spec-1', title: 'Naruto Shippuden - Final Valley', character: 'Naruto & Sasuke', tags: ['TV', 'Action', 'Naruto', 'Battle'], imageUrl: 'https://i.waifu.pics/Y~m8GgX.png', aspectRatio: 'landscape', author: 'Studio Pierrot Fanart', downloads: 8800, saves: 4900, category: 'Shonen Action', synopsis: 'Final battle at the Valley of the End.', rating: '8.7 / 10 MAL', type: 'TV', episodes: 500 }
 ];
 
 // Asports ratios, characters, keywords, categories pools for mapping incoming API results beautifully
@@ -124,18 +134,19 @@ let cachedNekosBest: AnimeWallpaper[] = [];
 let isFetchingApis = false;
 
 // Hydrate dynamically on startup from localStorage cache to guarantee immediate display in PC/mobile browsers
+// Hydrate dynamically on startup from localStorage cache to guarantee immediate display in PC/mobile browsers
 try {
   if (typeof window !== 'undefined') {
-    const localSAnime = window.localStorage.getItem('api_jikan_anime');
-    if (localSAnime) cachedJikanAnime = JSON.parse(localSAnime);
+    const localSAnime = cacheManager.get('api_jikan_anime', 86400000); // 24h
+    if (localSAnime) cachedJikanAnime = localSAnime;
     
-    const localSMovies = window.localStorage.getItem('api_jikan_movies');
-    if (localSMovies) cachedJikanMovies = JSON.parse(localSMovies);
+    const localSMovies = cacheManager.get('api_jikan_movies', 86400000); // 24h
+    if (localSMovies) cachedJikanMovies = localSMovies;
     
-    const localSNekos = window.localStorage.getItem('api_nekos_best');
-    if (localSNekos) cachedNekosBest = JSON.parse(localSNekos);
+    const localSNekos = cacheManager.get('api_nekos_best', 86400000); // 24h
+    if (localSNekos) cachedNekosBest = localSNekos;
     
-    console.log("Hydrated live API cache from browser LocalStorage:", {
+    console.log("Hydrated live API cache from cacheManager:", {
       anime: cachedJikanAnime.length,
       movies: cachedJikanMovies.length,
       artwork: cachedNekosBest.length
@@ -201,7 +212,7 @@ async function fetchAllPublicApisOnce() {
             } as AnimeWallpaper;
           });
           if (typeof window !== 'undefined') {
-            window.localStorage.setItem('api_jikan_anime', JSON.stringify(cachedJikanAnime));
+            cacheManager.set('api_jikan_anime', cachedJikanAnime);
           }
         }
       } else {
@@ -243,7 +254,7 @@ async function fetchAllPublicApisOnce() {
             } as AnimeWallpaper;
           });
           if (typeof window !== 'undefined') {
-            window.localStorage.setItem('api_jikan_movies', JSON.stringify(cachedJikanMovies));
+            cacheManager.set('api_jikan_movies', cachedJikanMovies);
           }
         }
       } else {
@@ -286,7 +297,7 @@ async function fetchAllPublicApisOnce() {
             } as AnimeWallpaper;
           });
           if (typeof window !== 'undefined') {
-            window.localStorage.setItem('api_nekos_best', JSON.stringify(cachedNekosBest));
+            cacheManager.set('api_nekos_best', cachedNekosBest);
           }
         }
       }
@@ -306,45 +317,29 @@ export async function fetchLiveAnimeWallpapers(startIndex: number, count: number
   // Pull live records asynchronously
   await fetchAllPublicApisOnce();
 
-  const categories = CATEGORIES.filter(c => c !== 'All');
+  // Combine all API data into a single pool for mixing
+  const allLiveResults: AnimeWallpaper[] = [
+    ...cachedJikanAnime,
+    ...cachedNekosBest,
+    // Add movies only once to reduce their frequency
+    ...cachedJikanMovies
+  ];
+
   const results: AnimeWallpaper[] = [];
 
   for (let i = 0; i < count; i++) {
     const currentId = startIndex + i;
-    const category = categories[currentId % categories.length];
-
+    
     let resolvedItem: AnimeWallpaper | null = null;
-
-    // Pick from movies API
-    if (category === 'Anime Movie Specials' && cachedJikanMovies.length > 0) {
-      const movieIdx = currentId % cachedJikanMovies.length;
-      resolvedItem = { ...cachedJikanMovies[movieIdx] };
-    } 
-    // Pick from Top television rankings/seasons
-    else if ((category === 'Shonen Action' || category === 'Fantasy Magic' || category === 'Cyberpunk Neon') && cachedJikanAnime.length > 0) {
-      const animePool = cachedJikanAnime.filter(a => a.category === category);
-      if (animePool.length > 0) {
-        const animeIdx = currentId % animePool.length;
-        resolvedItem = { ...animePool[animeIdx] };
-      }
-    } 
-    // Pick from illustrative fanarts
-    else if ((category === 'Lo-Fi Vibe' || category === 'Minimalist Art' || category === 'Scenic & Sky') && cachedNekosBest.length > 0) {
-      const nekoPool = cachedNekosBest.filter(n => n.category === category);
-      if (nekoPool.length > 0) {
-        const nekoIdx = currentId % nekoPool.length;
-        resolvedItem = { ...nekoPool[nekoIdx] };
-      }
+    
+    // Pick randomly from the combined pool
+    if (allLiveResults.length > 0) {
+      resolvedItem = { ...allLiveResults[currentId % allLiveResults.length] };
     }
 
     // Fallback block if any API is in cold-start / blocked/ offline
     if (!resolvedItem) {
-      const categoryMatches = INITIAL_WALLPAPERS.filter(item => item.category === category);
-      if (categoryMatches.length > 0) {
-        resolvedItem = { ...categoryMatches[currentId % categoryMatches.length] };
-      } else {
-        resolvedItem = { ...INITIAL_WALLPAPERS[currentId % INITIAL_WALLPAPERS.length] };
-      }
+      resolvedItem = { ...INITIAL_WALLPAPERS[currentId % INITIAL_WALLPAPERS.length] };
     }
 
     // Decorate ID to guarantee absolute unique React state mappings

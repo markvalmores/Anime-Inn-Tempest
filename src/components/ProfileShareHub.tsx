@@ -37,12 +37,34 @@ export const PRESET_COVERS = [
   "https://images.unsplash.com/photo-1522441815192-d9f04eb0615c?auto=format&fit=crop&w=800&q=80"  // Cherry Blossom
 ];
 
-// Preset Avatars
+// Preset Avatars (Expanded and diverse)
 export const PRESET_AVATARS = [
-  "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=150&q=80", // Anime Girl
+  "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=150&q=80", // Anime Girl 1
   "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=150&q=80", // Chibi Boy
   "https://images.unsplash.com/photo-1580477667995-2b94f01c9516?auto=format&fit=crop&w=150&q=80", // Cool Mask
-  "https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&w=150&q=80"  // Synth Neon
+  "https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&w=150&q=80", // Synth Neon
+  "https://images.unsplash.com/photo-1606567595334-d39a72cc36d2?auto=format&fit=crop&w=150&q=80", // Anime Girl 2
+  "https://images.unsplash.com/photo-1616788494707-ec68525bc77b?auto=format&fit=crop&w=150&q=80", // Anime Girl 3
+  "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=150&q=80", // Anime Girl 4
+  "https://images.unsplash.com/photo-1522441815192-d9f04eb0615c?auto=format&fit=crop&w=150&q=80", // Anime Girl 5
+  "https://images.unsplash.com/photo-1579463148285-1804f9810619?auto=format&fit=crop&w=150&q=80", // Anime Boy 2
+  "https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?auto=format&fit=crop&w=150&q=80", // Anime Boy 3
+  "https://i.waifu.pics/b6m8GgX.png", // Anime Avatar 11
+  "https://i.waifu.pics/7-m8GgX.png", // Anime Avatar 12
+  "https://i.waifu.pics/9~m8GgX.png", // Anime Avatar 13
+  "https://i.waifu.pics/e-m8GgX.png", // Anime Avatar 14
+  "https://i.waifu.pics/K-m8GgX.png", // Anime Avatar 15
+  "https://i.waifu.pics/8-m8GgX.png", // Anime Avatar 16
+  "https://i.waifu.pics/W-Wk-mF.png", // Anime Avatar 17
+  "https://i.waifu.pics/P~m8GgX.png", // Anime Avatar 18
+  "https://i.waifu.pics/y-m8GgX.png", // Anime Avatar 19
+  "https://i.waifu.pics/M-m8GgX.png", // Anime Avatar 20
+  "https://i.waifu.pics/F-m8GgX.png", // Anime Avatar 21
+  "https://i.waifu.pics/H-m8GgX.png", // Anime Avatar 22
+  "https://i.waifu.pics/O~m8GgX.png", // Anime Avatar 23
+  "https://i.waifu.pics/X~m8GgX.png", // Anime Avatar 24
+  "https://i.waifu.pics/Y~m8GgX.png", // Anime Avatar 25
+  "https://i.waifu.pics/Z~m8GgX.png"  // Anime Avatar 26
 ];
 
 export interface UserProfile {
@@ -86,7 +108,7 @@ export default function ProfileShareHub({
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerNickname, setRegisterNickname] = useState('');
   const [registerCode, setRegisterCode] = useState('');
-  const [avatarIndex, setAvatarIndex] = useState(0);
+  const [avatarIndex, setAvatarIndex] = useState(Math.floor(Math.random() * PRESET_AVATARS.length));
   const [coverIndex, setCoverIndex] = useState(0);
 
   const [loginEmail, setLoginEmail] = useState('');
@@ -1202,6 +1224,33 @@ export default function ProfileShareHub({
                   </span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Achievements Section */}
+          <div className="mt-6 pt-6 border-t border-slate-800">
+            <h3 className="text-[11px] font-black text-indigo-300 uppercase tracking-widest font-mono mb-4 flex items-center gap-2">
+              <Award className="w-4 h-4 text-emerald-400" />
+              Achievements
+            </h3>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { id: 'likes', title: '100 Likes', icon: '❤️', unlocked: ((activeProfile as any).totalLikes || 0) >= 100 },
+                { id: 'streak', title: '7 Days', icon: '🔥', unlocked: ((activeProfile as any).streak || 0) >= 7 },
+                { id: 'referral', title: '5 Referrals', icon: '🔗', unlocked: ((activeProfile as any).referralCount || 0) >= 5 },
+              ].map((badge) => (
+                <div
+                  key={badge.id}
+                  className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 ${
+                    badge.unlocked 
+                      ? 'bg-emerald-900/10 border-emerald-500/20' 
+                      : 'bg-slate-950/40 border-slate-850 opacity-60'
+                  }`}
+                >
+                  <div className={`text-xl ${badge.unlocked ? 'grayscale-0' : 'grayscale'}`}>{badge.icon}</div>
+                  <div className="text-[9px] font-bold text-slate-300 uppercase leading-none">{badge.title}</div>
+                </div>
+              ))}
             </div>
           </div>
 
