@@ -21,6 +21,7 @@ export default function AnimeCard({
   onLoadError,
   isDailyLimitReached = false,
 }: AnimeCardProps) {
+  const [heartParticles, setHeartParticles] = useState<{ id: string; x: number; y: number; angle: number; speed: number; scale: number }[]>([]);
   const [clickSparks, setClickSparks] = useState<{ id: number; x: number; y: number }[]>([]);
   const [heartPops, setHeartPops] = useState<{ id: number; x: number; y: number }[]>([]);
   const [showCenterHeart, setShowCenterHeart] = useState(false);
@@ -43,6 +44,27 @@ export default function AnimeCard({
     if (!wasPinned) {
       setShowCenterHeart(true);
       setTimeout(() => setShowCenterHeart(false), 800);
+
+      // Spawn heart burst particles around clicked coordinates!
+      const rect = e.currentTarget.getBoundingClientRect();
+      const parentRect = e.currentTarget.parentElement?.getBoundingClientRect();
+      const clickX = e.clientX - (parentRect ? parentRect.left : 0);
+      const clickY = e.clientY - (parentRect ? parentRect.top : 0);
+
+      const burstBatch = Array.from({ length: 8 }).map((_, idx) => ({
+        id: `${Date.now()}-${idx}-${Math.random()}`,
+        x: clickX,
+        y: clickY,
+        angle: (idx * 45) + (Math.random() - 0.5) * 20, // Circular distribution
+        speed: 35 + Math.random() * 45,
+        scale: 0.5 + Math.random() * 0.7,
+      }));
+      setHeartParticles((prev) => [...prev, ...burstBatch]);
+
+      // Auto-clean burst particles after animation runs
+      setTimeout(() => {
+        setHeartParticles((prev) => prev.filter((p) => !burstBatch.find((b) => b.id === p.id)));
+      }, 800);
     }
 
     // Dynamic floating spark click position (offset relative to visual viewport button click)
@@ -153,6 +175,30 @@ export default function AnimeCard({
             </motion.span>
           ))}
 
+          {/* Radiating Circular Heart Burst Particles */}
+          {heartParticles.map((particle) => {
+            const radian = (particle.angle * Math.PI) / 180;
+            const targetX = Math.cos(radian) * particle.speed;
+            const targetY = Math.sin(radian) * particle.speed;
+            return (
+              <motion.span
+                key={particle.id}
+                initial={{ opacity: 1, scale: 0.3, x: particle.x, y: particle.y }}
+                animate={{ 
+                  opacity: [1, 0.8, 0], 
+                  scale: [0.3, particle.scale, 0.4], 
+                  x: particle.x + targetX, 
+                  y: particle.y + targetY 
+                }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.75, ease: 'easeOut' }}
+                className="absolute z-50 pointer-events-none text-rose-500 drop-shadow-[0_0_6px_rgba(244,63,94,0.8)] text-base select-none"
+              >
+                ❤️
+              </motion.span>
+            );
+          })}
+
           {showCenterHeart && (
             <motion.div
               initial={{ scale: 0.2, opacity: 0 }}
@@ -175,23 +221,23 @@ export default function AnimeCard({
           )}
         </AnimatePresence>
 
-        {/* Quick Add Pin Button "+in" */}
+        {/* Quick Add Pin Button "Pin" with Heart Icon */}
         <div className="absolute top-3 right-3 z-20">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handlePinAction}
-            className={`relative flex items-center gap-1.5 py-2 px-3 text-[11px] font-black rounded-lg transition-all shadow-lg transform h-8 select-none ${
+            className={`relative flex items-center gap-1.5 py-1.5 px-2.5 sm:py-2 sm:px-3 text-[10px] sm:text-[11px] font-black rounded-lg transition-all shadow-lg transform h-8 select-none ${
               isPinned
-                ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white border border-indigo-400/40 cursor-pointer active:scale-95'
+                ? 'bg-gradient-to-r from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 text-white border border-rose-400/40 cursor-pointer active:scale-95'
                 : isDailyLimitReached
-                ? 'bg-rose-600 hover:bg-rose-700 text-white border border-rose-500/30 cursor-not-allowed shadow-rose-900/40'
-                : 'bg-indigo-500 hover:bg-indigo-400 text-slate-950 border border-transparent cursor-pointer active:scale-95'
+                ? 'bg-rose-955 text-slate-500 border border-slate-900 cursor-not-allowed'
+                : 'bg-white hover:bg-slate-100 text-slate-950 border border-transparent cursor-pointer active:scale-95'
             }`}
-            title={isPinned ? 'Liked' : isDailyLimitReached ? 'Daily limit of 100 reached! Resets at 12 AM Tokyo standard time JST.' : 'Liking this wallpaper grants 3 points!'}
+            title={isPinned ? 'Already Pinned!' : isDailyLimitReached ? 'Daily limit of 100 reached! resets at 12 AM Tokyo standard time JST.' : 'Liking this wallpaper grants 3 points!'}
           >
-            <Plus className={`w-3.5 h-3.5 transition-transform duration-200 stroke-[2.5] ${isPinned ? 'rotate-45' : isDailyLimitReached ? 'rotate-90 text-rose-200' : ''}`} />
-            <span>{isPinned ? 'Liked' : isDailyLimitReached ? 'Limit ✖' : '+in'}</span>
+            <Heart className={`w-3 h-3 sm:w-3.5 sm:h-3.5 transition-transform duration-200 stroke-[2.5] ${isPinned ? 'fill-current text-white scale-110' : 'text-slate-950 group-hover:text-rose-500'}`} />
+            <span>{isPinned ? 'Pinned' : isDailyLimitReached ? 'Limit' : 'Pin'}</span>
           </motion.button>
         </div>
 

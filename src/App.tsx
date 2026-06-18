@@ -30,7 +30,8 @@ import {
   Trash2,
   CalendarDays,
   X,
-  Search
+  Search,
+  Trophy
 } from 'lucide-react';
 
 import { AnimeWallpaper, RedemptionCode, UserStats, LikedHistoryItem } from './types';
@@ -532,7 +533,7 @@ export default function App() {
     localStorage.setItem('tempest_codes', JSON.stringify(updatedCodes));
     updatePoints(Math.max(0, points - newCode.pointsUsed));
     
-    const rewardName = newCode.rewardType === 'paypay' ? '200 PP Points JCode' : 'GCash ₱100 Code';
+    const rewardName = newCode.rewardType === 'paypay' ? '200 PP Points PayPayCode' : 'GCash ₱100 Code';
     setRecentActions(prev => [
       { id: `act-${Date.now()}`, text: `Generated ${rewardName}! Use 2x App to double!`, time: 'Just now', plus: true },
       ...prev.slice(0, 5)
@@ -643,17 +644,46 @@ export default function App() {
   }, [fetchMoreItems]);
 
   // Eagerly populate and stream fresh wallpaper graphics from free APIs on immediate mount
-  // Preload from cache first if available
+  // Preload from cache first if available, and run a self-healing check to flush low-quality cached products
   useEffect(() => {
     const cached = localStorage.getItem('cached_wallpapers');
     if (cached) {
       try {
-        setWallpapers(JSON.parse(cached));
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          // Identify if the cached wallpapers contain any legacy, missing, or photograph Unsplash pictures
+          const isLegacyOrBroken = parsed.some((wp: any) => 
+            !wp.id || 
+            wp.id.includes('deprecated') || 
+            !wp.imageUrl || 
+            wp.imageUrl.includes('unsplash.com') ||
+            !wp.category
+          );
+
+          if (isLegacyOrBroken || parsed.length < 4) {
+            console.warn("Outdated or picture-loaded cache detected. Active self-healing wipe...");
+            localStorage.removeItem('cached_wallpapers');
+            localStorage.removeItem('api_jikan_anime');
+            localStorage.removeItem('api_jikan_movies');
+            localStorage.removeItem('api_nekos_best');
+            setWallpapers(INITIAL_WALLPAPERS);
+            fetchMoreItems();
+          } else {
+            setWallpapers(parsed);
+          }
+        } else {
+          localStorage.removeItem('cached_wallpapers');
+          setWallpapers(INITIAL_WALLPAPERS);
+          fetchMoreItems();
+        }
       } catch (e) {
-        console.error("Cache parsing error", e);
+        console.error("Cache parsing error, cleaning state", e);
+        localStorage.removeItem('cached_wallpapers');
+        setWallpapers(INITIAL_WALLPAPERS);
         fetchMoreItems();
       }
     } else {
+      setWallpapers(INITIAL_WALLPAPERS);
       fetchMoreItems();
     }
   }, []);
@@ -1131,6 +1161,27 @@ export default function App() {
               </button>
             </div>
           </div>
+          
+          {/* Daily Milestone */}
+          <div className="bg-emerald-600/10 border border-emerald-500/25 rounded-xl p-4 lg:p-5">
+             <h3 className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-3 flex items-center gap-1.5 font-mono">
+               <Trophy className="w-3.5 h-3.5" />
+               Daily Milestone (50 Likes)
+             </h3>
+             <div className="w-full bg-slate-950 h-2 rounded-full mb-3 border border-slate-800">
+               <motion.div
+                 className="bg-emerald-500 h-full rounded-full"
+                 initial={{ width: 0 }}
+                 animate={{ width: `${Math.min((dailyLikesCount / 50) * 100, 100)}%` }}
+               />
+             </div>
+             <p className="text-[10px] text-slate-400">
+               {dailyLikesCount >= 50 
+                 ? "Goal Achieved! Bonus Points Awarded."
+                 : `${Math.max(0, 50 - dailyLikesCount)} more likes to reach the milestone.`
+               }
+             </p>
+          </div>
 
           {/* Recent Earnings Timeline */}
           <div className="hidden lg:flex flex-col gap-4 flex-1">
@@ -1310,6 +1361,77 @@ export default function App() {
                   <span className={`text-[10px] uppercase font-mono font-bold tracking-wider ${dailyLikesCount >= 100 ? 'text-rose-400 font-extrabold' : 'text-emerald-400'}`}>
                     {dailyLikesCount >= 100 ? 'Limit Active' : 'Allow Likes'}
                   </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 7-Day Streak Activity Line Graph */}
+            <div className="bg-slate-950/60 p-4 rounded-xl border border-indigo-500/10 mt-3 relative z-10 select-none flex flex-col lg:flex-row items-stretch gap-4">
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                    <h4 className="text-[10px] font-black uppercase text-indigo-300 tracking-widest font-mono">STREAK ACTIVITY (7-DAY PROGRESS)</h4>
+                  </div>
+                  <span className="text-[9px] text-slate-500 font-mono bg-slate-900 border border-slate-800 px-2 py-0.5 rounded">Active Streak: {streak} days</span>
+                </div>
+                
+                {/* Responsive High-Performance SVG Graph */}
+                <div className="h-20 w-full relative">
+                  <svg className="w-full h-full overflow-visible" viewBox="0 0 500 80" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="streakGraphGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#6366f1" stopOpacity="0.45"/>
+                        <stop offset="100%" stopColor="#6366f1" stopOpacity="0.0"/>
+                      </linearGradient>
+                    </defs>
+                    
+                    {/* Horizontal reference lines */}
+                    <line x1="0" y1="20" x2="500" y2="20" stroke="#1e293b" strokeDasharray="3 3" />
+                    <line x1="0" y1="50" x2="500" y2="50" stroke="#1e293b" strokeDasharray="3 3" />
+                    
+                    {/* Area under the path */}
+                    <path
+                      d={`M 0 80 L 0 ${75 - Math.min((streak >= 1 ? 7 : 0) * 4, 50)} Q 83 ${75 - Math.min((streak >= 2 ? 14 : 0) * 3, 52)} 166 ${75 - Math.min((streak >= 3 ? 21 : 0) * 3, 55)} T 332 ${75 - Math.min((streak >= 4 ? 28 : 0) * 2.2, 58)} T 500 ${75 - Math.min((streak >= 5 ? 35 : 0) * 2.1, 62)} L 500 80 Z`}
+                      fill="url(#streakGraphGradient)"
+                    />
+                    
+                    {/* Main stroke line with a glowing stroke */}
+                    <path
+                      d={`M 0 ${75 - Math.min((streak >= 1 ? 7 : 0) * 4, 50)} Q 83 ${75 - Math.min((streak >= 2 ? 14 : 0) * 3, 52)} 166 ${75 - Math.min((streak >= 3 ? 21 : 0) * 3, 55)} T 332 ${75 - Math.min((streak >= 4 ? 28 : 0) * 2.2, 58)} T 500 ${75 - Math.min((streak >= 5 ? 35 : 0) * 2.1, 62)}`}
+                      fill="none"
+                      stroke="#818cf8"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                    />
+                    
+                    {/* Glowing coordinate nodes */}
+                    <circle cx="83" cy={75 - Math.min((streak >= 2 ? 14 : 0) * 3, 52)} r="4.5" fill={streak >= 2 ? "#818cf8" : "#334155"} stroke="#1e293b" strokeWidth="1.5" />
+                    <circle cx="166" cy={75 - Math.min((streak >= 3 ? 21 : 0) * 3, 55)} r="4.5" fill={streak >= 3 ? "#818cf8" : "#334155"} stroke="#1e293b" strokeWidth="1.5" />
+                    <circle cx="332" cy={75 - Math.min((streak >= 4 ? 28 : 0) * 2.2, 58)} r="4.5" fill={streak >= 4 ? "#818cf8" : "#334155"} stroke="#1e293b" strokeWidth="1.5" />
+                    <circle cx="500" cy={75 - Math.min((streak >= 5 ? 35 : 0) * 2.1, 62)} r="5.5" fill="#f43f5e" className="animate-ping" style={{ transformOrigin: `500px ${75 - Math.min((streak >= 5 ? 35 : 0) * 2.1, 62)}px` }} />
+                    <circle cx="500" cy={75 - Math.min((streak >= 5 ? 35 : 0) * 2.1, 62)} r="4.5" fill="#f43f5e" stroke="#1e293b" strokeWidth="1.5" />
+                  </svg>
+                </div>
+                
+                {/* Horizontal X Axis labels */}
+                <div className="flex justify-between text-[8px] font-mono text-slate-500 font-bold uppercase tracking-wider mt-1 px-1">
+                  <span>Day {Math.max(1, streak - 3)}</span>
+                  <span>Day {Math.max(2, streak - 2)}</span>
+                  <span>Day {Math.max(3, streak - 1)}</span>
+                  <span className="text-violet-400">Day {streak} (Today)</span>
+                </div>
+              </div>
+              
+              {/* Stats side-panel (multiplier metrics) */}
+              <div className="lg:w-36 shrink-0 grid grid-cols-2 lg:grid-cols-1 gap-2 pt-3 lg:pt-0 border-t lg:border-t-0 lg:border-l border-slate-800 lg:pl-4 justify-between">
+                <div className="flex flex-col justify-center">
+                  <span className="text-[8px] text-slate-500 uppercase font-black font-mono tracking-wider">Estimated Yield</span>
+                  <span className="text-sm font-black text-white font-mono mt-0.5">+{7 * (streak || 1)} Pts</span>
+                </div>
+                <div className="flex flex-col justify-center">
+                  <span className="text-[8px] text-indigo-400 uppercase font-black font-mono tracking-widest">Active Multiplier</span>
+                  <span className="text-sm font-black text-rose-400 font-mono mt-0.5">{(1 + (streak * 0.05)).toFixed(2)}x Boost</span>
                 </div>
               </div>
             </div>
@@ -1556,8 +1678,8 @@ export default function App() {
             </div>
           </div>
 
-          {/* Geometric responsive dynamic flex layout or grid catalog */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {/* Geometric responsive dynamic flex layout or grid catalog compact on mobile */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
             {filteredWallpapers.map((wallpaper) => (
               <AnimeCard
                 key={wallpaper.id}

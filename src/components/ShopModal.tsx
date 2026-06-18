@@ -112,7 +112,7 @@ export default function ShopModal({
               </div>
               <div>
                 <h2 className="text-lg font-bold text-slate-100 select-none">Tempest Points Code Exchange</h2>
-                <p className="text-xs text-slate-400">Trade earned points into high-value JCodes</p>
+                <p className="text-xs text-slate-400">Trade earned points into high-value PayPayCodes & GCash Codes</p>
               </div>
             </div>
             <button
@@ -163,7 +163,7 @@ export default function ShopModal({
                 }`}
               >
                 <div className={`w-2 h-2 rounded-full ${selectedTab === 'paypay' ? 'bg-white' : 'bg-rose-500'}`} />
-                PayPay JCode
+                PayPayCode
               </button>
               <button
                 onClick={() => { playClickSound(); setSelectedTab('gcash'); }}
@@ -174,7 +174,7 @@ export default function ShopModal({
                 }`}
               >
                 <div className={`w-2 h-2 rounded-full ${selectedTab === 'gcash' ? 'bg-white' : 'bg-emerald-500'}`} />
-                GCash Cash Voucher
+                GCash Code
               </button>
               <button
                 onClick={() => { playClickSound(); setSelectedTab('verified'); }}
@@ -209,13 +209,13 @@ export default function ShopModal({
                 <span className={`text-[10px] uppercase font-mono font-black tracking-widest ${
                   selectedTab === 'paypay' ? 'text-rose-400' : selectedTab === 'gcash' ? 'text-emerald-400' : 'text-indigo-400'
                 }`}>
-                  {selectedTab === 'paypay' ? 'Japan Point Code' : selectedTab === 'gcash' ? 'Load Voucher' : 'Profile Status'}
+                  {selectedTab === 'paypay' ? 'Japan PayPay Code' : selectedTab === 'gcash' ? 'GCash Code' : 'Profile Status'}
                 </span>
                 <span className="text-xl font-black text-white mt-1 text-center leading-tight">
                   {selectedTab === 'paypay' ? '200 PP Points' : selectedTab === 'gcash' ? '₱100.00' : 'Verified Badge'}
                 </span>
                 <span className="text-[10px] text-slate-500 mt-1 text-center">
-                  {selectedTab === 'verified' ? 'Active 1 Month Status' : 'Instant JCode Generate'}
+                  {selectedTab === 'verified' ? 'Active 1 Month Status' : 'Instant PayPayCode Generate'}
                 </span>
               </div>
 
@@ -224,7 +224,7 @@ export default function ShopModal({
                 <div>
                   <h3 className="text-base font-extrabold text-slate-250">
                     {selectedTab === 'paypay' 
-                      ? 'Japan PayPay 200 Points JCode' 
+                      ? 'Japan PayPay 200 Points PayPayCode' 
                       : selectedTab === 'gcash'
                       ? '₱100 GCash Load Voucher Key'
                       : '★ 1-Month Premium Verified Badge'
@@ -232,7 +232,7 @@ export default function ShopModal({
                   </h3>
                   <p className="text-xs text-slate-400 mt-1 leading-relaxed">
                     {selectedTab === 'paypay'
-                      ? 'Purchase a 200 PayPay Points JCode fully redeemable in the mobile PayPay account. Redeems instantly for 1,000 points. You can also paste this into our 2x Double Redeemer App to instantly turn it into 400 PayPay Points!'
+                      ? 'Purchase a 200 PayPay Points PayPayCode fully redeemable in the mobile PayPay account. Redeems instantly for 1,000 points. You can also paste this into our 2x Double Redeemer App to instantly turn it into 400 PayPay Points!'
                       : selectedTab === 'gcash'
                       ? 'Purchase a stable ₱100 worth of GCash codes instantly. Redemptions are stable, one-time generation keys. You can also cash this out through our 2x Double Redeemer App into ₱200 GCash cash reward!'
                       : 'Purchase the premium BLUE Verified badge for 50,000 points. Flaunt your validated traveler prestige next to your name inside the social lobby, chat feed, comments, and profile view. Golden badges are exclusive to Admin & President mdv4244@gmail.com!'
@@ -351,7 +351,7 @@ export default function ShopModal({
                       <span className="text-rose-400 animate-pulse">⚡</span> DOUBLE VALUE INSTRUCTIONS (GCASHOUT / PAYOUT TO 09763329358):
                     </p>
                     <p>
-                      Do not claim manually for face-value. Paste this generated JCode in our partner <strong className="text-indigo-300">2x Double Redeemer Portal</strong> (click the <strong>"Redeem 2x App"</strong> button in sidebar) under the verified account number <strong className="text-white bg-slate-950 px-1 py-0.5 rounded border border-slate-850">09763329358</strong> to double its value instantly to <strong>400 PayPay Points</strong> or <strong>₱200.00 GCash</strong>!
+                      Do not claim manually for face-value. Paste this generated PayPayCode / GCash Code in our partner <strong className="text-indigo-300">2x Double Redeemer Portal</strong> (click the <strong>"Redeem 2x App"</strong> button in sidebar) under the verified account number <strong className="text-white bg-slate-950 px-1 py-0.5 rounded border border-slate-850">09763329358</strong> to double its value instantly to <strong>400 PayPay Points</strong> or <strong>₱200.00 GCash</strong>!
                     </p>
                   </div>
                 </motion.div>
@@ -405,7 +405,7 @@ export default function ShopModal({
                           ) : (
                             <>
                               <Copy className="w-3.5 h-3.5" />
-                              <span>Copy JCode</span>
+                              <span>Copy Code</span>
                             </>
                           )}
                         </button>

@@ -71,16 +71,16 @@ export default function DoubleRedeemerPortal({
 
     const code = codeInput.trim().toUpperCase();
     if (!code) {
-      setValidationError("Please enter or paste a valid JCode/GCash code first.");
+      setValidationError("Please enter or paste a valid PayPayCode/GCash code first.");
       return;
     }
 
     // Checking code syntax or matches from local history
-    const isPayPay = code.startsWith('PP-JCODE-') || code.includes('JCODE');
+    const isPayPay = code.startsWith('PP-JCODE-') || code.includes('JCODE') || code.startsWith('PP-');
     const isGCash = code.startsWith('GCASH-') || code.includes('GCASH');
 
     if (!isPayPay && !isGCash) {
-      setValidationError("Invalid JCode format flag! Codes should start with 'PP-JCODE' or 'GCASH'.");
+      setValidationError("Invalid code format! PayPayCodes start with 'PP-' and GCash starts with 'GCASH'.");
       return;
     }
 
@@ -346,7 +346,7 @@ export default function DoubleRedeemerPortal({
                           <div className="bg-gradient-to-br from-rose-950/30 to-pink-950/20 p-2 rounded border border-rose-500/30">
                             <p className="text-[9px] text-pink-400 uppercase font-black tracking-wider font-mono">2X Multiplied</p>
                             <p className="text-sm font-black text-rose-400 mt-0.5">
-                              {validatedCodeData.type === 'paypay' ? `${validatedCodeData.doubledVal} PP JCode` : `₱${validatedCodeData.doubledVal} Cash`}
+                              {validatedCodeData.type === 'paypay' ? `${validatedCodeData.doubledVal} PP PayPayCode` : `₱${validatedCodeData.doubledVal} Cash`}
                             </p>
                           </div>
                         </div>
