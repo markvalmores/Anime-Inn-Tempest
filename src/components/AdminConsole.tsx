@@ -31,7 +31,8 @@ export default function AdminConsole({
     playClickSound();
     setAuthError('');
 
-    if (securityPassword === '121997') {
+    // Obfuscated credential verification to prevent unauthorized inspection
+    if (typeof window !== 'undefined' && window.btoa && btoa(securityPassword) === 'MTIxOTk3') {
       setIsGeneratorUnlocked(true);
       setNotification('ACCESS GRANTED: Master Code Generator Unlocked!');
       setTimeout(() => setNotification(''), 3000);
@@ -173,7 +174,7 @@ export default function AdminConsole({
             {!isGeneratorUnlocked ? (
               <form onSubmit={handleUnlockGenerator} className="space-y-1.5">
                 <p className="text-[8px] text-slate-400 uppercase leading-relaxed">
-                  Enter secondary administrative passcode credential (121997) to authorize code registration:
+                  Provide authorized administrative security passcode to reveal registration deck controls:
                 </p>
                 <div className="flex gap-1.5">
                   <input
