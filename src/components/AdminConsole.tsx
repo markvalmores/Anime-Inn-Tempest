@@ -266,7 +266,9 @@ export default function AdminConsole({
                   <div key={user.email} className="p-1.5 bg-slate-950 border border-slate-850 rounded-lg flex items-center justify-between gap-1 text-[10px]">
                     <div className="truncate flex-1">
                       <span className="text-white font-bold block truncate leading-none mb-0.5">{user.nickname}</span>
-                      <span className="text-slate-500 text-[8px] tracking-tight block truncate leading-none">{user.email} (ID: {user.userId})</span>
+                      <span className="text-slate-500 text-[8px] tracking-tight block truncate leading-none">
+                        {user.email.toLowerCase().trim() === 'mdv4244@gmail.com' ? 'ADMINISTRATIVE SECURED' : user.email} (ID: {user.userId})
+                      </span>
                     </div>
                     <span className="text-indigo-400 font-extrabold text-[10px] shrink-0">{user.points?.toLocaleString()} pts</span>
                   </div>
@@ -294,7 +296,7 @@ export default function AdminConsole({
                   <option value="">-- SELECT USER EMAIL --</option>
                   {registeredUsers.map((user: any) => (
                     <option key={user.email} value={user.email}>
-                      {user.nickname} ({user.email})
+                      {user.nickname} ({user.email.toLowerCase().trim() === 'mdv4244@gmail.com' ? 'ADMINISTRATIVE SECURED' : user.email})
                     </option>
                   ))}
                 </select>

@@ -1095,7 +1095,9 @@ export default function ProfileShareHub({
                       <span>SECURED</span>
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-400 font-semibold font-mono tracking-wide">{activeProfile.email}</p>
+                  <p className="text-[10px] text-slate-400 font-semibold font-mono tracking-wide">
+                    {activeProfile.email.toLowerCase().trim() === 'mdv4244@gmail.com' ? 'PRESIDENT & ADMIN (SECURED)' : activeProfile.email}
+                  </p>
                   <div className="text-[10px] text-indigo-300 font-mono flex items-center gap-1 justify-center sm:justify-start">
                     <span>MEMBER ID:</span>
                     <span className="bg-indigo-950/80 border border-indigo-850 px-1.5 rounded text-white font-extrabold">{activeProfile.userId}</span>
@@ -1146,7 +1148,7 @@ export default function ProfileShareHub({
               <span className="text-[9px] text-slate-400 uppercase font-black tracking-wider font-mono block">Your Invite credentials to share:</span>
               <div className="flex gap-1.5">
                 <div className="flex-1 bg-slate-950 border border-slate-850 rounded-xl px-3 py-2 flex items-center justify-between text-xs font-mono text-slate-300 overflow-hidden">
-                  <span className="truncate mr-2">Email: <strong className="text-white">{(activeProfile as any).email}</strong></span>
+                  <span className="truncate mr-2">Email: <strong className="text-white">{(activeProfile as any).email.toLowerCase().trim() === 'mdv4244@gmail.com' ? 'SECURED_ADMIN' : (activeProfile as any).email}</strong></span>
                   <span className="text-[9px] opacity-40 select-none">|</span>
                   <span className="shrink-0 text-[10px] ml-2">ID: <strong className="text-indigo-300">{(activeProfile as any).userId}</strong></span>
                 </div>
@@ -1154,7 +1156,8 @@ export default function ProfileShareHub({
                   type="button"
                   onClick={() => {
                     playClickSound();
-                    navigator.clipboard.writeText((activeProfile as any).email);
+                    const textToCopy = (activeProfile as any).email.toLowerCase().trim() === 'mdv4244@gmail.com' ? (activeProfile as any).userId : (activeProfile as any).email;
+                    navigator.clipboard.writeText(textToCopy);
                     setCopyReferralSuccess(true);
                     setTimeout(() => setCopyReferralSuccess(false), 2000);
                   }}
@@ -1162,12 +1165,13 @@ export default function ProfileShareHub({
                 >
                   {copyReferralSuccess ? <span className="text-emerald-400 font-bold">Copied!</span> : <>
                     <Copy className="w-3.5 h-3.5" />
-                    <span>Copy Email</span>
+                    <span>{(activeProfile as any).email.toLowerCase().trim() === 'mdv4244@gmail.com' ? 'Copy ID' : 'Copy Email'}</span>
                   </>}
                 </button>
               </div>
               <p className="text-[9px] text-slate-405 leading-normal font-sans">
-                Instruct other members to enter your email <span className="text-indigo-300 font-mono">{(activeProfile as any).email}</span> or ID <span className="text-indigo-300 font-mono">{(activeProfile as any).userId}</span> into the "Referral Account Email or ID" field when registering. Once your referral counter hits exactly <span className="text-white font-bold">21</span>, your vault will be instantly paid <span className="text-emerald-400 text-[10px] font-serif font-extrabold">2,000 PTS</span>!
+                Instruct other members to enter your {(activeProfile as any).email.toLowerCase().trim() === 'mdv4244@gmail.com' ? 'ID ' : 'email / ID '} 
+                <span className="text-indigo-300 font-mono">{(activeProfile as any).email.toLowerCase().trim() === 'mdv4244@gmail.com' ? (activeProfile as any).userId : (activeProfile as any).email}</span> {(activeProfile as any).email.toLowerCase().trim() !== 'mdv4244@gmail.com' && <>or ID <span className="text-indigo-300 font-mono">{(activeProfile as any).userId}</span></>} into the "Referral Account Email or ID" field when registering. Once your referral counter hits exactly <span className="text-white font-bold">21</span>, your vault will be instantly paid <span className="text-emerald-400 text-[10px] font-serif font-extrabold">2,000 PTS</span>!
               </p>
             </div>
 

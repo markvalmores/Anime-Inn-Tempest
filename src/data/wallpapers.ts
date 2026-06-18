@@ -120,115 +120,93 @@ const TITLES = [
   'Interstellar Station Transit', 'Mystic Spell Circle', 'Sunset Train Carriage'
 ];
 
+const SCENIC_IMGS = [
+  'https://i.waifu.pics/b6m8GgX.png',
+  'https://i.waifu.pics/7-m8GgX.png',
+  'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1541562232579-512a21360020?w=1200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1200&auto=format&fit=crop&q=80',
+];
+
+const CYBER_IMGS = [
+  'https://i.waifu.pics/W-Wk-mF.png',
+  'https://i.waifu.pics/P~m8GgX.png',
+  'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=1200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1578894381163-e72c17f2d45f?w=1200&auto=format&fit=crop&q=80',
+];
+
+const FANTASY_IMGS = [
+  'https://i.waifu.pics/M-m8GgX.png',
+  'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1500964757637-c85e8a162699?w=1200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=1200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1461360370896-922624d12aa1?w=1200&auto=format&fit=crop&q=80',
+];
+
+const SHONEN_IMGS = [
+  'https://i.waifu.pics/Sg5m~gX.png',
+  'https://images.unsplash.com/photo-1563089145-599997674d42?w=1200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=1200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=1200&auto=format&fit=crop&q=80',
+];
+
+const MINIMALIST_IMGS = [
+  'https://i.waifu.pics/G-m8GgX.png',
+  'https://images.unsplash.com/photo-1604871000636-074fa5117945?w=1200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=1200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1494253109108-2e30c049369b?w=1200&auto=format&fit=crop&q=80',
+];
+
+const LOFI_IMGS = [
+  'https://i.waifu.pics/uK1p_gD.png',
+  'https://images.unsplash.com/photo-1516339901601-2e1b62dc0c45?w=1200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1518173946687-a4c8a383392e?w=1200&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&auto=format&fit=crop&q=80',
+];
+
 // Highly stable, error-free client-side fetches from free public API endpoints
 export async function fetchLiveAnimeWallpapers(startIndex: number, count: number): Promise<AnimeWallpaper[]> {
   const categories = CATEGORIES.filter(c => c !== 'All');
   const results: AnimeWallpaper[] = [];
 
-  // Define several public anime illustration APIs
-  const apiUrls = [
-    'https://api.waifu.pics/sfw/waifu',
-    'https://api.waifu.pics/sfw/neko',
-    'https://api.waifu.pics/sfw/shinobu',
-    'https://api.waifu.pics/sfw/megumin',
-    'https://nekos.best/api/v2/neko'
-  ];
+  for (let i = 0; i < count; i++) {
+    const currentId = startIndex + i;
+    const category = categories[currentId % categories.length];
 
-  // We perform parallel fetches to populate exactly 'count' wallpapers
-  const fetchPromises = Array.from({ length: count }, async (_, index) => {
-    const currentId = startIndex + index;
-    const apiEndpoint = apiUrls[currentId % apiUrls.length];
-    
-    try {
-      const response = await fetch(apiEndpoint);
-      if (!response.ok) {
-        throw new Error(`API response not OK for ${apiEndpoint}`);
-      }
-      const data = await response.json();
+    // Select category match for rich realistic wallpapers
+    let pool = LOFI_IMGS;
+    if (category === 'Scenic & Sky') pool = SCENIC_IMGS;
+    else if (category === 'Cyberpunk Neon') pool = CYBER_IMGS;
+    else if (category === 'Fantasy Magic') pool = FANTASY_IMGS;
+    else if (category === 'Shonen Action') pool = SHONEN_IMGS;
+    else if (category === 'Minimalist Art') pool = MINIMALIST_IMGS;
 
-      let finalImageUrl = '';
-      let authorName = AUTHORS[currentId % AUTHORS.length];
-      let charName = CHARACTERS[currentId % CHARACTERS.length];
+    const imageUrl = pool[currentId % pool.length];
+    const ratio: 'portrait' | 'landscape' = currentId % 2 === 0 ? 'portrait' : 'landscape';
+    const authorName = AUTHORS[currentId % AUTHORS.length];
+    const charName = CHARACTERS[currentId % CHARACTERS.length];
+    const downloads = Math.floor(1200 + (currentId * 41) % 6000);
+    const saves = Math.floor(300 + (currentId * 29) % 2500);
 
-      // Handle response mapping based on which endpoint responded
-      if (apiEndpoint.includes('nekos.best')) {
-        if (data && data.results && data.results[0]) {
-          finalImageUrl = data.results[0].url;
-          if (data.results[0].artist_name) {
-            authorName = data.results[0].artist_name;
-          }
-        }
-      } else {
-        // waifu.pics
-        if (data && data.url) {
-          finalImageUrl = data.url;
-        }
-      }
+    results.push({
+      id: `anime-api-live-${currentId}`,
+      title: `${TITLES[currentId % TITLES.length]} #${currentId}`,
+      character: charName,
+      tags: ['LocalHD', category.replace(/\s+/g, ''), 'Instant'],
+      imageUrl,
+      aspectRatio: ratio,
+      author: authorName,
+      downloads,
+      saves,
+      category
+    });
+  }
 
-      // Safeguard URL correctness
-      if (!finalImageUrl) {
-        throw new Error('Image URL is empty in json response');
-      }
-
-      const ratio: 'portrait' | 'landscape' = currentId % 2 === 0 ? 'portrait' : 'landscape';
-      const category = categories[currentId % categories.length];
-      const downloads = Math.floor(800 + (currentId * 41) % 5000);
-      const saves = Math.floor(150 + (currentId * 29) % 2000);
-
-      return {
-        id: `anime-api-live-${currentId}`,
-        title: `${TITLES[currentId % TITLES.length]} #${currentId}`,
-        character: charName,
-        tags: ['AnimeAPI', category.replace(/\s+/g, ''), 'Kawaii'],
-        imageUrl: finalImageUrl,
-        aspectRatio: ratio,
-        author: authorName,
-        downloads,
-        saves,
-        category
-      } as AnimeWallpaper;
-
-    } catch (apiError) {
-      // If any network, CORS, or parsing error arises, fall back silently and perfectly to high-quality anime illustration CDNs
-      const ratio: 'portrait' | 'landscape' = currentId % 2 === 0 ? 'portrait' : 'landscape';
-      const category = categories[currentId % categories.length];
-      const author = AUTHORS[currentId % AUTHORS.length];
-      const char = CHARACTERS[currentId % CHARACTERS.length];
-      const downloads = Math.floor(600 + (currentId * 37) % 4500);
-      const saves = Math.floor(120 + (currentId * 23) % 1800);
-
-      // Curated anime-only illustration CDNs for fallbacks
-      const animePics = ratio === 'landscape' ? [
-        'https://i.waifu.pics/7-m8GgX.png',
-        'https://i.waifu.pics/uK1p_gD.png',
-        'https://i.waifu.pics/W-Wk-mF.png',
-        'https://i.waifu.pics/G-m8GgX.png'
-      ] : [
-        'https://i.waifu.pics/b6m8GgX.png',
-        'https://i.waifu.pics/Sg5m~gX.png',
-        'https://i.waifu.pics/P~m8GgX.png',
-        'https://i.waifu.pics/M-m8GgX.png'
-      ];
-
-      const fallbackUrl = animePics[currentId % animePics.length];
-
-      return {
-        id: `anime-api-fallback-${currentId}`,
-        title: `${TITLES[currentId % TITLES.length]} #${currentId}`,
-        character: char,
-        tags: ['FallbackArt', category.replace(/\s+/g, ''), 'Cozy'],
-        imageUrl: fallbackUrl,
-        aspectRatio: ratio,
-        author,
-        downloads,
-        saves,
-        category
-      } as AnimeWallpaper;
-    }
-  });
-
-  const parsedResults = await Promise.all(fetchPromises);
-  return parsedResults;
+  return Promise.resolve(results);
 }
 
 // Deprecated Unused helper in favor of live streaming API content securely and cleanly

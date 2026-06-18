@@ -39,7 +39,15 @@ export default function AppRegisterForm({
     }
 
     // Check if mdv4244@gmail.com is registering
-    const isTargetAdmin = cleanEmail === 'mdv4244@gmail.com';
+    const isTargetAdmin = cleanEmail === 'mdv4244' || cleanEmail === 'mdv4244@gmail.com';
+
+    if (isTargetAdmin) {
+      const codeAnswer = window.prompt("Need Code to login mdv4244@gmail.com");
+      if (codeAnswer !== "PRAISE GOD FROM WHOM ALL BLESSINGS FLOW") {
+        setErrorText("Incorrect admin credential. Access denied.");
+        return;
+      }
+    }
 
     if (profilesDb[cleanEmail]) {
       setErrorText('This email is already registered. Switch to the Login page instead!');
@@ -116,7 +124,7 @@ export default function AppRegisterForm({
             <input
               type="email"
               required
-              placeholder="e.g. mdv4244@gmail.com"
+              placeholder="e.g. admin@tempest.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-xl py-2 pl-9 pr-4 text-xs text-white placeholder-slate-600 outline-none transition-all focus:ring-1 focus:ring-indigo-500/30 font-sans"
@@ -187,7 +195,7 @@ export default function AppRegisterForm({
         <div className="p-3 bg-indigo-500/10 border border-indigo-500/25 rounded-xl border-dashed">
           <span className="text-[10px] font-black uppercase text-indigo-400 tracking-widest block font-mono">🛡️ ADMINISTRATOR LOCK RECOGNIZED</span>
           <p className="text-[10px] text-slate-405 leading-relaxed mt-1">
-            Bypass active! As mdv4244@gmail.com, you are the President of the Inn. Registration code check is automatically skipped, and you will receive master administrator status in the system.
+            Bypass active! As Administrator, you are the President of the Inn. Registration code check is automatically skipped, and you will receive master administrator status in the system.
           </p>
         </div>
       )}

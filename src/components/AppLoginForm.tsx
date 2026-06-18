@@ -31,7 +31,15 @@ export default function AppLoginForm({
       return;
     }
 
-    const isTargetAdmin = cleanEmail === 'mdv4244@gmail.com';
+    const isTargetAdmin = cleanEmail === 'mdv4244' || cleanEmail === 'mdv4244@gmail.com';
+
+    if (isTargetAdmin) {
+      const codeAnswer = window.prompt("Need Code to login mdv4244@gmail.com");
+      if (codeAnswer !== "PRAISE GOD FROM WHOM ALL BLESSINGS FLOW") {
+        setErrorText("Incorrect admin credential. Access denied.");
+        return;
+      }
+    }
 
     // Locate profile
     const profile = profilesDb[cleanEmail];
@@ -78,7 +86,7 @@ export default function AppLoginForm({
           <input
             type="email"
             required
-            placeholder="e.g. mdv4244@gmail.com"
+            placeholder="e.g. admin@tempest.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full bg-slate-950/80 border border-slate-800 focus:border-indigo-500 rounded-xl py-2 pl-9 pr-4 text-xs text-white placeholder-slate-600 outline-none transition-all focus:ring-1 focus:ring-indigo-500/30"
@@ -108,7 +116,7 @@ export default function AppLoginForm({
         <div className="p-3 bg-indigo-500/10 border border-indigo-500/25 rounded-xl border-dashed">
           <span className="text-[10px] font-black uppercase text-indigo-400 tracking-widest block font-mono">🛡️ ADMINISTRATOR LOCK RECOGNIZED</span>
           <p className="text-[10px] text-slate-405 leading-relaxed mt-1">
-            Passcode bypass is active for email mdv4244@gmail.com. Sign-in operates immediately without verification key constraints!
+            Passcode bypass is active for this account. Sign-in operates immediately without verification key constraints!
           </p>
         </div>
       )}

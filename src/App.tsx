@@ -1100,7 +1100,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Admin Command Console System for mdv4244@gmail.com */}
+          {/* Admin Command Console System for administrator accounts */}
           {isAdmin && (
             <AdminConsole
               profilesDb={profilesDb}
