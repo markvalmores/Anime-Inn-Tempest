@@ -682,7 +682,7 @@ export default function App() {
   const isAdmin = activeUserEmail.toLowerCase().trim() === 'mdv4244@gmail.com';
 
   // Circular progress ring calculations for Daily Like Quota Tracker
-  const progressRadius = 20;
+  const progressRadius = 19;
   const progressCircumference = 2 * Math.PI * progressRadius;
   const progressPercentage = Math.min((dailyLikesCount / 100) * 100, 100);
   const progressStrokeDashoffset = progressCircumference - (progressPercentage / 100) * progressCircumference;
@@ -1224,7 +1224,7 @@ export default function App() {
 
             {/* Daily Like Quota Tracker */}
             <div className="border-t border-indigo-500/15 pt-4 mt-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10 select-none">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
                 <div className="relative w-12 h-12 flex items-center justify-center select-none shrink-0">
                   {/* SVG progress ring around the heart */}
                   <svg className="absolute w-full h-full transform -rotate-90 pointer-events-none" viewBox="0 0 48 48">
@@ -1252,9 +1252,9 @@ export default function App() {
                       }}
                       transition={{ 
                         type: "spring", 
-                        stiffness: 80, 
-                        damping: 15,
-                        mass: 0.8
+                        stiffness: 40, 
+                        damping: 12,
+                        mass: 0.6
                       }}
                     />
                   </svg>
@@ -1262,11 +1262,26 @@ export default function App() {
                     <Heart className={`w-4.5 h-4.5 ${dailyLikesCount >= 100 ? 'fill-current text-rose-500 animate-pulse' : 'text-indigo-400'}`} />
                   </div>
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <h4 className="text-xs font-bold text-slate-100 uppercase tracking-wide flex items-center gap-2">
                     Daily Pin Limit: <span className={`font-mono font-black ${dailyLikesCount >= 100 ? 'text-rose-400 bg-rose-900/40 px-1.5 py-0.5 rounded border border-rose-500/20' : 'text-indigo-400 bg-indigo-900/40 px-1.5 py-0.5 rounded border border-indigo-500/20'}`}>{dailyLikesCount}/100</span>
                   </h4>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  
+                  {/* Smooth fill-up horizontal progress bar */}
+                  <div className="w-full max-w-[200px] h-1 bg-slate-900 rounded-full overflow-hidden mt-1.5 border border-slate-800/80 relative">
+                    <motion.div
+                      className={`h-full rounded-full ${dailyLikesCount >= 100 ? 'bg-gradient-to-r from-red-500 to-rose-500' : 'bg-gradient-to-r from-indigo-500 to-purple-500'}`}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min((dailyLikesCount / 100) * 100, 100)}%` }}
+                      transition={{ 
+                        type: "spring", 
+                        stiffness: 40, 
+                        damping: 12 
+                      }}
+                    />
+                  </div>
+
+                  <p className="text-[11px] text-slate-400 mt-1.5">
                     {dailyLikesCount >= 100 
                       ? '100 likes cap reached! Liking is disabled and "+in" buttons are turned red. Resets at midnight.' 
                       : 'Newly liked wallpapers grant +3 points up to a limit of 100 total likes daily.'
