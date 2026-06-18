@@ -29,7 +29,8 @@ import {
   History,
   Trash2,
   CalendarDays,
-  X
+  X,
+  Search
 } from 'lucide-react';
 
 import { AnimeWallpaper, RedemptionCode, UserStats, LikedHistoryItem } from './types';
@@ -162,6 +163,7 @@ export default function App() {
   const [wallpapers, setWallpapers] = useState<AnimeWallpaper[]>(INITIAL_WALLPAPERS);
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [activeTag, setActiveTag] = useState<string>('All Tags');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [points, setPoints] = useState<number>(0);
   const [pinnedIds, setPinnedIds] = useState<string[]>([]);
   const [redeemedCodes, setRedeemedCodes] = useState<RedemptionCode[]>([]);
@@ -659,11 +661,22 @@ export default function App() {
   // Removed problematic IntersectionObserver to fix infinite loop refresh cycles.
   // We now rely on explicit user actions for refreshing like the "Refresh Feed" button.
 
-  // Filtering Wallpapers by category, tag, and liked check values
+  // Filtering Wallpapers by category, tag, search query, and liked check values
   const filteredWallpapers = wallpapers.filter((wp) => {
     const isNotBroken = !brokenIds.includes(wp.id);
     const matchesCategory = activeCategory === 'All' || wp.category === activeCategory;
     const matchesTag = activeTag === 'All Tags' || (wp.tags && wp.tags.some(tag => tag.toLowerCase() === activeTag.toLowerCase()));
+    
+    // Title, character, or tag search query match
+    let matchesSearch = true;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      const titleMatch = wp.title && wp.title.toLowerCase().includes(query);
+      const characterMatch = wp.character && wp.character.toLowerCase().includes(query);
+      const categoryMatch = wp.category && wp.category.toLowerCase().includes(query);
+      const tagsMatch = wp.tags && wp.tags.some(tag => tag.toLowerCase().includes(query));
+      matchesSearch = !!(titleMatch || characterMatch || categoryMatch || tagsMatch);
+    }
     
     // Liked status filtering
     const isPinned = pinnedIds.includes(wp.id);
@@ -675,7 +688,7 @@ export default function App() {
       matchesLikedFilter = !isPinned;
     }
 
-    return isNotBroken && matchesCategory && matchesTag && matchesLikedFilter;
+    return isNotBroken && matchesCategory && matchesTag && matchesLikedFilter && matchesSearch;
   });
 
   const activeProfile = activeUserEmail ? profilesDb[activeUserEmail.toLowerCase().trim()] : null;
@@ -1442,24 +1455,46 @@ export default function App() {
             </div>
             
             {/* Interactive Refresh catalyst & count */}
-            <div className="flex items-center justify-between sm:justify-end gap-3 select-none self-stretch lg:self-auto">
-              <div className="text-[11px] font-mono text-slate-500 flex items-center gap-1.5">
-                <span>Displaying</span>
-                <span className="text-indigo-400 font-bold">{filteredWallpapers.length} Wallpapers</span>
-                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 select-none self-stretch lg:self-auto">
+              {/* Text Search Bar for title/tag/character matching */}
+              <div className="relative flex items-center bg-slate-900 border border-slate-800 focus-within:border-indigo-500/50 transition-all rounded-lg px-2.5 py-1.5 min-w-[200px] select-text">
+                <Search className="w-3.5 h-3.5 text-slate-500 mr-1.5 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Filter by title, tag..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-transparent text-xs text-white focus:outline-none w-full placeholder-slate-500 font-bold"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="text-slate-500 hover:text-slate-350 cursor-pointer p-0.5 ml-1 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
               </div>
 
-              {/* Refresh Feed Trigger Button with smooth rotating lock animation */}
-              <button
-                onClick={handleRefreshFeed}
-                disabled={loadingMore}
-                id="refresh-feed-button"
-                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg border border-indigo-500/20 bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-300 hover:text-indigo-200 text-xs font-black uppercase tracking-wider transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed select-none cursor-pointer shadow-md"
-                title="Pulls completely fresh, rich unliked wallpapers from free public APIs"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${loadingMore ? 'animate-spin text-emerald-400' : ''}`} />
-                <span>Refresh Feed</span>
-              </button>
+              <div className="flex items-center justify-between sm:justify-end gap-3">
+                <div className="text-[11px] font-mono text-slate-500 flex items-center gap-1.5">
+                  <span>Displaying</span>
+                  <span className="text-indigo-400 font-bold">{filteredWallpapers.length} Wallpapers</span>
+                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                </div>
+
+                {/* Refresh Feed Trigger Button with smooth rotating lock animation */}
+                <button
+                  onClick={handleRefreshFeed}
+                  disabled={loadingMore}
+                  id="refresh-feed-button"
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg border border-indigo-500/20 bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-300 hover:text-indigo-200 text-xs font-black uppercase tracking-wider transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed select-none cursor-pointer shadow-md"
+                  title="Pulls completely fresh, rich unliked wallpapers from free public APIs"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingMore ? 'animate-spin text-emerald-400' : ''}`} />
+                  <span>Refresh Feed</span>
+                </button>
+              </div>
             </div>
           </div>
 
